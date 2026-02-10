@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Usuários | Portal de Automações</title>
+  <link rel="icon" type="image/png" href="/static/logo-hexa.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --totvs-dark: #0d1117;
+      --totvs-navy: #161b22;
+      --totvs-blue: #00d4e5;
+      --totvs-cyan: #00bcd4;
+      --totvs-cyan-dark: #0097a7;
+      --totvs-white: #ffffff;
+      --totvs-gray: #8b949e;
+      --totvs-gray-light: #c9d1d9;
+      --color-success: #2ea043;
+      --color-danger: #f85149;
+      --color-warning: #d29922;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.15);
+      --shadow-xl: 0 20px 40px -10px rgba(0,0,0,0.2);
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: var(--totvs-dark);
+      min-height: 100vh;
+      color: var(--totvs-white);
+    }
+
+    /* Header */
+    .header {
+      background: rgba(13, 17, 23, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 0 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; }
+    .logo-img { height: 28px; width: auto; }
+    .logo-text { color: var(--totvs-white); font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.5rem; }
+    .logo-text span { color: var(--totvs-blue); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+    }
+
+    .user-info i {
+      color: var(--totvs-blue);
+    }
+
+    .user-info span {
+      font-size: 0.9rem;
+      color: var(--totvs-gray-light);
+    }
+
+    .btn-logout {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid var(--color-danger);
+      border-radius: 8px;
+      color: var(--color-danger);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-logout:hover {
+      background: var(--color-danger);
+      color: var(--totvs-white);
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 100px 3rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .page-title h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+    }
+
+    .btn-add {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, var(--totvs-blue), var(--totvs-cyan-dark));
+      border: none;
+      border-radius: 10px;
+      color: var(--totvs-dark);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 212, 229, 0.3);
+    }
+
+    /* Table */
+    .users-table-container {
+      background: var(--totvs-navy);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .users-table th,
+    .users-table td {
+      padding: 1rem 1.5rem;
+      text-align: left;
+    }
+
+    .users-table th {
+      background: rgba(0,0,0,0.2);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--totvs-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .users-table tr {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: var(--transition);
+    }
+
+    .users-table tbody tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .users-table td {
+      font-size: 0.95rem;
+      color: var(--totvs-gray-light);
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-admin {
+      background: rgba(0, 212, 229, 0.15);
+      color: var(--totvs-blue);
+    }
+
+    .badge-user {
+      background: rgba(139, 148, 158, 0.15);
+      color: var(--totvs-gray);
+    }
+
+    .badge-active {
+      background: rgba(46, 160, 67, 0.15);
+      color: var(--color-success);
+    }
+
+    .badge-inactive {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--color-danger);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-action {
+      padding: 0.5rem;
+      background: rgba(255,255,255,0.05);
+      border: none;
+      border-radius: 6px;
+      color: var(--totvs-gray-light);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-action:hover {
+      background: rgba(255,255,255,0.1);
+      color: var(--totvs-white);
+    }
+
+    .btn-action.edit:hover {
+      background: rgba(0, 212, 229, 0.2);
+      color: var(--totvs-blue);
+    }
+
+    .btn-action.delete:hover {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--color-danger);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 2rem;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--totvs-navy);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: var(--shadow-xl);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--totvs-gray);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      color: var(--totvs-white);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--totvs-gray-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--totvs-dark);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--totvs-white);
+      transition: var(--transition);
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--totvs-blue);
+    }
+
+    .form-group input::placeholder {
+      color: var(--totvs-gray);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--totvs-blue);
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    .btn-cancel {
+      padding: 0.75rem 1.5rem;
+      background: rgba(255,255,255,0.05);
+      border: none;
+      border-radius: 10px;
+      color: var(--totvs-gray-light);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .btn-save {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, var(--totvs-blue), var(--totvs-cyan-dark));
+      border: none;
+      border-radius: 10px;
+      color: var(--totvs-dark);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 212, 229, 0.3);
+    }
+
+    .btn-save:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      transform: translateX(150%);
+      transition: var(--transition);
+      z-index: 3000;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      background: var(--color-success);
+      color: var(--totvs-white);
+    }
+
+    .toast.error {
+      background: var(--color-danger);
+      color: var(--totvs-white);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header { padding: 0 1.5rem; }
+      .main-content { padding: 100px 1.5rem 2rem; }
+      .page-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+      .users-table-container { overflow-x: auto; }
+      .form-row { flex-direction: column; gap: 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <a href="/dashboard" class="logo">
+      <img src="/static/logo-totvs-branco.png" alt="TOTVS" class="logo-img">
+      <span class="logo-text"><span> | Nordeste</span></span>
+    </a>
+    <div class="header-actions">
+      <div class="user-info">
+        <i class="fas fa-user-shield"></i>
+        <span>{{ user.name }}</span>
+      </div>
+      <a href="/logout" class="btn-logout">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </a>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div class="page-title">
+        <h1><i class="fas fa-users"></i> Gerenciar Usuários</h1>
+      </div>
+      <button class="btn-add" onclick="openModal()">
+        <i class="fas fa-plus"></i> Novo Usuário
+      </button>
+    </div>
+
+    <div class="users-table-container">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <!-- Preenchido via JS -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modalTitle">Novo Usuário</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="userForm">
+          <input type="hidden" id="editingUsername">
+
+          <div class="form-group">
+            <label for="username">Login *</label>
+            <input type="text" id="username" placeholder="Ex: joao.silva" required>
+          </div>
+
+          <div class="form-group">
+            <label for="name">Nome Completo *</label>
+            <input type="text" id="name" placeholder="Ex: João da Silva" required>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Senha * <span id="passwordHint">(deixe em branco para "mudar123")</span></label>
+            <input type="password" id="password" placeholder="Digite a senha">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <div class="checkbox-group">
+                <input type="checkbox" id="isAdmin">
+                <label for="isAdmin">Administrador</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="checkbox-group">
+                <input type="checkbox" id="isActive" checked>
+                <label for="isActive">Ativo</label>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveUser()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Mensagem</span>
+  </div>
+
+  <script>
+    let editingUser = null;
+
+    // Load users on page load
+    document.addEventListener('DOMContentLoaded', loadUsers);
+
+    async function loadUsers() {
+      try {
+        const response = await fetch('/api/usuarios');
+        const users = await response.json();
+        renderUsers(users);
+      } catch (error) {
+          showToast('Erro ao carregar usuário', 'error');
+      }
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = '';
+
+      for (const [username, data] of Object.entries(users)) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${username}</strong></td>
+          <td>${data.name || '-'}</td>
+          <td><span class="badge ${data.is_admin ? 'badge-admin' : 'badge-user'}">${data.is_admin ? 'Admin' : 'Usuário'}</span></td>
+          <td><span class="badge ${data.active ? 'badge-active' : 'badge-inactive'}">${data.active ? 'Ativo' : 'Inativo'}</span></td>
+          <td class="actions">
+            <button class="btn-action edit" onclick="editUser('${username}')" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            ${username !== 'admin' ? `
+              <button class="btn-action delete" onclick="deleteUser('${username}')" title="Excluir">
+                <i class="fas fa-trash"></i>
+              </button>
+            ` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function openModal(user = null) {
+      editingUser = user;
+      document.getElementById('modalOverlay').classList.add('show');
+      document.getElementById('modalTitle').textContent = user ? 'Editar Usuário' : 'Novo Usuário';
+      document.getElementById('passwordHint').textContent = user ? '(deixe em branco para manter)' : '(deixe em branco para "mudar123")';
+
+      // Reset form
+      document.getElementById('userForm').reset();
+      document.getElementById('editingUsername').value = '';
+      document.getElementById('isActive').checked = true;
+
+      // Disable username field when editing
+      document.getElementById('username').disabled = !!user;
+
+      if (user) {
+        document.getElementById('editingUsername').value = user.username;
+        document.getElementById('username').value = user.username;
+        document.getElementById('name').value = user.name || '';
+        document.getElementById('isAdmin').checked = user.is_admin;
+        document.getElementById('isActive').checked = user.active;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('show');
+      editingUser = null;
+    }
+
+    function closeModalOutside(event) {
+      if (event.target === document.getElementById('modalOverlay')) {
+        closeModal();
+      }
+    }
+
+    async function editUser(username) {
+      try {
+        const response = await fetch('/api/usuarios');
+        const users = await response.json();
+        const user = users[username];
+        if (user) {
+          openModal({ username, ...user });
+        }
+      } catch (error) {
+        showToast('Erro ao carregar usuário', 'error');
+      }
+    }
+
+    async function saveUser() {
+      const username = document.getElementById('username').value.trim();
+      const name = document.getElementById('name').value.trim();
+      const password = document.getElementById('password').value;
+      const isAdmin = document.getElementById('isAdmin').checked;
+      const isActive = document.getElementById('isActive').checked;
+
+      if (!username) {
+        showToast('Preencha o campo Login', 'error');
+        return;
+      }
+
+      if (!name) {
+        showToast('Preencha o campo Nome Completo', 'error');
+        return;
+      }
+
+      const data = {
+        username,
+        name,
+        is_admin: isAdmin,
+        active: isActive
+      };
+
+      if (password) {
+        data.password = password;
+      }
+
+      try {
+        const isEditing = !!editingUser;
+        const url = isEditing ? `/api/usuarios/${editingUser.username}` : '/api/usuarios';
+        const method = isEditing ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast(result.message || 'Usuário salvo com sucesso!', 'success');
+          closeModal();
+          loadUsers();
+        } else {
+          showToast(result.error || 'Erro ao salvar usuário', 'error');
+        }
+      } catch (error) {
+        showToast('Erro de conexão', 'error');
+      }
+    }
+
+    async function deleteUser(username) {
+      if (!confirm(`Tem certeza que deseja excluir o usuário "${username}"?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/usuarios/${username}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast('Usuário excluído com sucesso!', 'success');
+          loadUsers();
+        } else {
+          showToast(result.error || 'Erro ao excluir usuário', 'error');
+        }
+      } catch (error) {
+        showToast('Erro de conexão', 'error');
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+
+      toastMessage.textContent = message;
+      toast.className = `toast ${type} show`;
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automação Royalties | TOTVS</title>
+
+  <link rel="icon" type="image/png" href="/static/logo-hexa.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --azulescuro: #002233;
+      --azul: #00dbff;
+      --roxo: #a44dff;
+      --verde: #00ffd4;
+      --limao: #d9ff65;
+      --laranja: #ff8900;
+      --rosa: #ff009e;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--azulescuro) 0%, #003d5c 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 219, 255, 0.2);
+      padding: 0;
+      max-width: 900px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--azulescuro) 0%, #004466 100%);
+      padding: 0;
+      text-align: center;
+      border-bottom: 4px solid var(--verde);
+      overflow: hidden;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(0, 255, 212, 0.15);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .header-brand img {
+      height: 24px;
+    }
+
+    .header-brand span {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .header-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid rgba(0, 255, 212, 0.4);
+      border-radius: 6px;
+      color: var(--verde);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .header-back:hover {
+      background: rgba(0, 255, 212, 0.1);
+      border-color: var(--verde);
+    }
+
+    .header-back i {
+      font-size: 12px;
+    }
+
+    .header-content {
+      padding: 25px 40px 30px;
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    h1 i {
+      color: var(--verde);
+      font-size: 22px;
+    }
+
+    .subtitle {
+      color: var(--verde);
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    .content {
+      padding: 30px 40px 40px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #e0e0e0;
+      margin-bottom: 25px;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab:hover {
+      color: var(--azulescuro);
+    }
+
+    .tab.active {
+      color: var(--verde);
+      border-bottom-color: var(--verde);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .upload-area {
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      background: #f8f9fa;
+    }
+
+    .upload-area:hover {
+      border-color: var(--verde);
+      background: #f0fff8;
+      box-shadow: 0 4px 12px rgba(0, 255, 212, 0.1);
+    }
+
+    .upload-area label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--azulescuro);
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    .icon {
+      font-size: 22px;
+    }
+
+    small {
+      color: #666;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 0 auto;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      width: 100%;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    input[type="file"]:hover {
+      border-color: var(--verde);
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--verde) 0%, #00b89f 100%);
+      color: var(--azulescuro);
+      border: none;
+      padding: 16px 40px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 255, 212, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 255, 212, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Config Section */
+    .config-section {
+      margin-bottom: 25px;
+    }
+
+    .config-section h3 {
+      color: var(--azulescuro);
+      font-size: 16px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .config-section h3 i {
+      color: var(--verde);
+    }
+
+    .config-list {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 15px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .config-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #fff;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .config-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .config-item span {
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      color: var(--azulescuro);
+    }
+
+    .btn-remove {
+      background: var(--rosa);
+      color: #fff;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-remove:hover {
+      background: #d4007f;
+      transform: scale(1.05);
+    }
+
+    .add-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .add-form input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .add-form input:focus {
+      outline: none;
+      border-color: var(--verde);
+    }
+
+    .btn-add {
+      background: var(--azul);
+      color: var(--azulescuro);
+      padding: 10px 20px;
+      font-size: 14px;
+      width: auto;
+      margin: 0;
+    }
+
+    .resultado {
+      margin-top: 30px;
+      padding: 0;
+      border-radius: 12px;
+      display: none;
+      overflow: hidden;
+    }
+
+    .resultado.sucesso {
+      border: 2px solid var(--verde);
+      display: block;
+    }
+
+    .resultado.erro {
+      border: 2px solid var(--rosa);
+      display: block;
+    }
+
+    .resultado-header {
+      padding: 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .resultado.sucesso .resultado-header {
+      background: linear-gradient(135deg, var(--verde) 0%, #00d4b8 100%);
+      color: var(--azulescuro);
+    }
+
+    .resultado.erro .resultado-header {
+      background: linear-gradient(135deg, var(--rosa) 0%, #ff4081 100%);
+      color: #fff;
+    }
+
+    .resultado-body {
+      padding: 25px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid #dee2e6;
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--azul);
+      margin-bottom: 5px;
+    }
+
+    .value.sim {
+      color: var(--verde);
+    }
+
+    .value.nao {
+      color: var(--rosa);
+    }
+
+    .value.total {
+      color: var(--roxo);
+    }
+
+    .label {
+      color: #666;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, var(--verde) 0%, #00b89f 100%);
+      margin-top: 20px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .download-btn:hover {
+      box-shadow: 0 6px 20px rgba(0, 255, 212, 0.4);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 30px;
+      padding: 30px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--verde);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: var(--azulescuro);
+      font-weight: 500;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 16px 20px;
+      color: #666;
+      font-size: 12px;
+      background: linear-gradient(135deg, var(--azulescuro) 0%, #003d5c 100%);
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .success-message {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, var(--verde) 0%, #00d4b8 100%);
+      color: var(--azulescuro);
+      padding: 30px 50px;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0, 255, 212, 0.4);
+      z-index: 9999;
+      font-size: 24px;
+      font-weight: 700;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translate(-50%, -60%);
+        opacity: 0;
+      }
+      to {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+      }
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9998;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+
+    .empty-list {
+      text-align: center;
+      color: #999;
+      padding: 20px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay"></div>
+  <div class="success-message" id="successMessage">
+    ✅ Processamento Finalizado com Sucesso!
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <a href="/dashboard" class="header-brand">
+          <img src="/static/logo-totvs-branco.png" alt="TOTVS" onerror="this.style.display='none'" />
+          <span>| Nordeste</span>
+        </a>
+        <a href="/dashboard" class="header-back">
+          <i class="fas fa-arrow-left"></i>
+          Voltar ao Dashboard
+        </a>
+      </div>
+      <div class="header-content">
+        <h1><i class="fas fa-chart-pie"></i> Automação Royalties</h1>
+        <p class="subtitle">Classificação automática de royalties por produto e cliente</p>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" data-tab="processar">
+          <i class="fas fa-bolt"></i> Processar
+        </div>
+        <div class="tab" data-tab="produtos">
+          <i class="fas fa-box"></i> Produtos
+        </div>
+        <div class="tab" data-tab="clientes">
+          <i class="fas fa-users"></i> Clientes
+        </div>
+      </div>
+
+      <!-- Tab Processar -->
+      <div class="tab-content active" id="tab-processar">
+        <form id="formProcessar" enctype="multipart/form-data">
+          <div class="upload-area">
+            <label>
+              <span class="icon">📊</span>
+              <span>Arquivo Excel - Royalties</span>
+            </label>
+            <small>Abas esperadas: "Detalhado NF" e "Detalhado Baixas" | Formato: .xlsx, .xls</small>
+            <input type="file" name="arquivo" id="arquivo" accept=".xlsx,.xls" required />
+          </div>
+
+          <button type="submit" id="btnProcessar">
+            ⚡ Processar Arquivo
+          </button>
+        </form>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <p class="loading-text">Processando dados de Royalties...</p>
+        </div>
+
+        <div class="resultado" id="resultado"></div>
+      </div>
+
+      <!-- Tab Produtos -->
+      <div class="tab-content" id="tab-produtos">
+        <div class="config-section">
+          <h3><i class="fas fa-box"></i> Produtos sem Royalties</h3>
+          <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+            Produtos nesta lista receberão "NÃO" automaticamente na coluna Royalties
+          </p>
+          <div class="config-list" id="listaProdutos">
+            <div class="empty-list">Carregando...</div>
+          </div>
+          <div class="add-form">
+            <input type="text" id="novoProduto" placeholder="Código do produto (ex: PS01009)" />
+            <button class="btn-add" onclick="adicionarProduto()">
+              <i class="fas fa-plus"></i> Adicionar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Clientes -->
+      <div class="tab-content" id="tab-clientes">
+        <div class="config-section">
+          <h3><i class="fas fa-users"></i> Clientes sem Royalties</h3>
+          <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+            Clientes nesta lista receberão "NÃO" automaticamente na coluna Royalties
+          </p>
+          <div class="config-list" id="listaClientes">
+            <div class="empty-list">Carregando...</div>
+          </div>
+          <div class="add-form">
+            <input type="text" id="novoCliente" placeholder="Código do cliente (ex: A00001)" />
+            <button class="btn-add" onclick="adicionarCliente()">
+              <i class="fas fa-plus"></i> Adicionar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Automação Royalties | TOTVS © 2025
+    </div>
+  </div>
+
+  <script>
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Carregar configurações
+    async function carregarConfig() {
+      try {
+        const resp = await fetch('/api/royalties/config');
+        const data = await resp.json();
+
+        renderizarProdutos(data.produtos_nao_royalties || []);
+        renderizarClientes(data.clientes_nao_royalties || []);
+      } catch (err) {
+        console.error('Erro ao carregar config:', err);
+      }
+    }
+
+    function renderizarProdutos(produtos) {
+      const lista = document.getElementById('listaProdutos');
+      if (produtos.length === 0) {
+        lista.innerHTML = '<div class="empty-list">Nenhum produto cadastrado</div>';
+        return;
+      }
+
+      lista.innerHTML = produtos.sort().map(p => `
+        <div class="config-item">
+          <span>${p}</span>
+          <button class="btn-remove" onclick="removerProduto('${p}')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderizarClientes(clientes) {
+      const lista = document.getElementById('listaClientes');
+      if (clientes.length === 0) {
+        lista.innerHTML = '<div class="empty-list">Nenhum cliente cadastrado</div>';
+        return;
+      }
+
+      lista.innerHTML = clientes.sort().map(c => `
+        <div class="config-item">
+          <span>${c}</span>
+          <button class="btn-remove" onclick="removerCliente('${c}')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function adicionarProduto() {
+      const input = document.getElementById('novoProduto');
+      const valor = input.value.trim().toUpperCase();
+      if (!valor) return;
+
+      try {
+        const resp = await fetch('/api/royalties/produtos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ produto: valor })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+          input.value = '';
+          carregarConfig();
+        } else {
+          alert(data.error || 'Erro ao adicionar produto');
+        }
+      } catch (err) {
+        alert('Erro ao adicionar produto');
+      }
+    }
+
+    async function removerProduto(produto) {
+      if (!confirm(`Remover produto ${produto}?`)) return;
+
+      try {
+        const resp = await fetch(`/api/royalties/produtos/${produto}`, {
+          method: 'DELETE'
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+          carregarConfig();
+        } else {
+          alert(data.error || 'Erro ao remover produto');
+        }
+      } catch (err) {
+        alert('Erro ao remover produto');
+      }
+    }
+
+    async function adicionarCliente() {
+      const input = document.getElementById('novoCliente');
+      const valor = input.value.trim().toUpperCase();
+      if (!valor) return;
+
+      try {
+        const resp = await fetch('/api/royalties/clientes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cliente: valor })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+          input.value = '';
+          carregarConfig();
+        } else {
+          alert(data.error || 'Erro ao adicionar cliente');
+        }
+      } catch (err) {
+        alert('Erro ao adicionar cliente');
+      }
+    }
+
+    async function removerCliente(cliente) {
+      if (!confirm(`Remover cliente ${cliente}?`)) return;
+
+      try {
+        const resp = await fetch(`/api/royalties/clientes/${cliente}`, {
+          method: 'DELETE'
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+          carregarConfig();
+        } else {
+          alert(data.error || 'Erro ao remover cliente');
+        }
+      } catch (err) {
+        alert('Erro ao remover cliente');
+      }
+    }
+
+    // Carregar ao iniciar
+    carregarConfig();
+
+    // Mensagem de sucesso
+    function showSuccessMessage() {
+      const overlay = document.getElementById('overlay');
+      const message = document.getElementById('successMessage');
+
+      overlay.classList.add('show');
+      message.classList.add('show');
+
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        message.classList.remove('show');
+      }, 3000);
+    }
+
+    // Download
+    async function baixarArquivo(nomeArquivo) {
+      const resp = await fetch(`/api/royalties/download/${nomeArquivo}`);
+      if (!resp.ok) throw new Error('Erro ao baixar arquivo');
+
+      const blob = await resp.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+    }
+
+    // Form submit
+    document.getElementById('formProcessar').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const btn = document.getElementById('btnProcessar');
+      const loading = document.getElementById('loading');
+      const resultado = document.getElementById('resultado');
+
+      btn.disabled = true;
+      loading.style.display = 'block';
+      resultado.style.display = 'none';
+
+      try {
+        const resp = await fetch('/api/royalties/processar', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await resp.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Erro desconhecido');
+        }
+
+        resultado.className = 'resultado sucesso';
+        resultado.innerHTML = `
+          <div class="resultado-header">
+            ✅ Processamento Concluído com Sucesso
+          </div>
+
+          <div class="resultado-body">
+            <h4 style="color: var(--azulescuro); margin-bottom: 15px;">📊 Validação Faturamento (NF)</h4>
+            <div class="grid grid-3">
+              <div class="card">
+                <div class="value sim">${formatNumber(data.fat_sim)}</div>
+                <div class="label">✓ SIM</div>
+              </div>
+              <div class="card">
+                <div class="value nao">${formatNumber(data.fat_nao)}</div>
+                <div class="label">✗ NÃO</div>
+              </div>
+              <div class="card">
+                <div class="value total">${formatNumber(data.fat_total)}</div>
+                <div class="label">Total</div>
+              </div>
+            </div>
+
+            <h4 style="color: var(--azulescuro); margin-bottom: 15px; margin-top: 20px;">💰 Validação Baixas</h4>
+            <div class="grid grid-3">
+              <div class="card">
+                <div class="value sim">${formatNumber(data.baixas_sim)}</div>
+                <div class="label">✓ SIM</div>
+              </div>
+              <div class="card">
+                <div class="value nao">${formatNumber(data.baixas_nao)}</div>
+                <div class="label">✗ NÃO</div>
+              </div>
+              <div class="card">
+                <div class="value total">${formatNumber(data.baixas_total)}</div>
+                <div class="label">Total</div>
+              </div>
+            </div>
+
+            <button class="download-btn" onclick="baixarArquivo('${data.arquivo_saida}')">
+              📥 Baixar Arquivo Processado
+            </button>
+          </div>
+        `;
+
+        // Download automático
+        await baixarArquivo(data.arquivo_saida);
+        showSuccessMessage();
+
+      } catch (err) {
+        resultado.className = 'resultado erro';
+        resultado.innerHTML = `
+          <div class="resultado-header">
+            ❌ Erro no Processamento
+          </div>
+          <div class="resultado-body">
+            <p style="color: #666; text-align: center;">${err.message}</p>
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        loading.style.display = 'none';
+      }
+    });
+
+    function formatNumber(num) {
+      if (num === undefined || num === null) return '0,00';
+      return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num);
+    }
+  </script>
+</body>
+</html>

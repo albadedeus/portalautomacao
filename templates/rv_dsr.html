@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Processador RV e DSR | TOTVS</title>
+
+  <link rel="icon" type="image/png" href="/static/logo-hexa.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --azulescuro: #002233;
+      --azul: #00dbff;
+      --roxo: #a44dff;
+      --verde: #00ffd4;
+      --limao: #d9ff65;
+      --laranja: #ff8900;
+      --rosa: #ff009e;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--azulescuro) 0%, #003d5c 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 219, 255, 0.2);
+      padding: 0;
+      max-width: 750px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--azulescuro) 0%, #004466 100%);
+      padding: 0;
+      text-align: center;
+      border-bottom: 4px solid var(--azul);
+      overflow: hidden;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(0, 219, 255, 0.15);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .header-brand img {
+      height: 24px;
+    }
+
+    .header-brand span {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .header-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid rgba(0, 219, 255, 0.4);
+      border-radius: 6px;
+      color: var(--azul);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .header-back:hover {
+      background: rgba(0, 219, 255, 0.1);
+      border-color: var(--azul);
+    }
+
+    .header-back i {
+      font-size: 12px;
+    }
+
+    .header-content {
+      padding: 25px 40px 30px;
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    h1 i {
+      color: var(--laranja);
+      font-size: 22px;
+    }
+
+    .subtitle {
+      color: var(--azul);
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    .content {
+      padding: 30px 40px 40px;
+    }
+
+    .upload-area {
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      background: #f8f9fa;
+    }
+
+    .upload-area:hover {
+      border-color: var(--azul);
+      background: #f0f8ff;
+      box-shadow: 0 4px 12px rgba(0, 219, 255, 0.1);
+    }
+
+    .upload-area label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--azulescuro);
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    .icon {
+      font-size: 22px;
+    }
+
+    small {
+      color: #666;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 0 auto;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      width: 100%;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    input[type="file"]:hover {
+      border-color: var(--azul);
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--azul) 0%, var(--roxo) 100%);
+      color: #fff;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 219, 255, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 219, 255, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .resultado {
+      margin-top: 30px;
+      padding: 0;
+      border-radius: 12px;
+      display: none;
+      overflow: hidden;
+    }
+
+    .resultado.sucesso {
+      border: 2px solid var(--verde);
+      display: block;
+    }
+
+    .resultado.erro {
+      border: 2px solid var(--rosa);
+      display: block;
+    }
+
+    .resultado-header {
+      padding: 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .resultado.sucesso .resultado-header {
+      background: linear-gradient(135deg, var(--verde) 0%, #00d4b8 100%);
+      color: var(--azulescuro);
+    }
+
+    .resultado.erro .resultado-header {
+      background: linear-gradient(135deg, var(--rosa) 0%, #ff4081 100%);
+      color: #fff;
+    }
+
+    .resultado-body {
+      padding: 25px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid #dee2e6;
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--azul);
+      margin-bottom: 5px;
+    }
+
+    .value.acionista {
+      color: var(--laranja);
+    }
+
+    .value.clt {
+      color: var(--roxo);
+    }
+
+    .value.ignorado {
+      color: #999;
+    }
+
+    .label {
+      color: #666;
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .arquivos-lista {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      margin-top: 20px;
+    }
+
+    .arquivos-lista h3 {
+      color: var(--azulescuro);
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .arquivo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .arquivo-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .arquivo-nome {
+      color: #333;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arquivo-nome i {
+      color: var(--azul);
+    }
+
+    .btn-download-mini {
+      background: var(--verde);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-download-mini:hover {
+      background: #00d4b8;
+      transform: scale(1.05);
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, var(--verde) 0%, #00b89f 100%);
+      margin-top: 20px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .download-btn:hover {
+      box-shadow: 0 6px 20px rgba(0, 255, 212, 0.4);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 30px;
+      padding: 30px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--azul);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: var(--azulescuro);
+      font-weight: 500;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 16px 20px;
+      color: #666;
+      font-size: 12px;
+      background: linear-gradient(135deg, var(--azulescuro) 0%, #003d5c 100%);
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .success-message {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, var(--verde) 0%, #00d4b8 100%);
+      color: var(--azulescuro);
+      padding: 30px 50px;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0, 255, 212, 0.4);
+      z-index: 9999;
+      font-size: 24px;
+      font-weight: 700;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translate(-50%, -60%);
+        opacity: 0;
+      }
+      to {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+      }
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9998;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay"></div>
+  <div class="success-message" id="successMessage">
+    ✅ Processamento Finalizado com Sucesso!
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <a href="/dashboard" class="header-brand">
+          <img src="/static/logo-totvs-branco.png" alt="TOTVS" onerror="this.style.display='none'" />
+          <span>| Nordeste</span>
+        </a>
+        <a href="/dashboard" class="header-back">
+          <i class="fas fa-arrow-left"></i>
+          Voltar ao Dashboard
+        </a>
+      </div>
+      <div class="header-content">
+        <h1><i class="fas fa-file-invoice-dollar"></i> Processador RV e DSR</h1>
+        <p class="subtitle">Remuneração Variável e Décimo Terceiro Salário</p>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <form id="formProcessar" enctype="multipart/form-data">
+        <div class="upload-area">
+          <label>
+            <span class="icon">📊</span>
+            <span>Arquivo Excel - Modelo de Automação</span>
+          </label>
+          <small>Aba: "MODELO PARA AUTOMAÇÃO" | Formato: .xlsx</small>
+          <input type="file" name="arquivo" id="arquivo" accept=".xlsx" required />
+        </div>
+
+        <button type="submit" id="btnProcessar">
+          ⚡ Processar Arquivo
+        </button>
+      </form>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p class="loading-text">Processando dados de RV e DSR...</p>
+      </div>
+
+      <div class="resultado" id="resultado"></div>
+    </div>
+
+    <div class="footer">
+      Processador RV e DSR | TOTVS © 2025
+    </div>
+  </div>
+
+  <script>
+    function showSuccessMessage() {
+      const overlay = document.getElementById('overlay');
+      const message = document.getElementById('successMessage');
+
+      overlay.classList.add('show');
+      message.classList.add('show');
+
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        message.classList.remove('show');
+      }, 3000);
+    }
+
+    async function baixarArquivo(url, nomeArquivo) {
+      const resp = await fetch(url, { method: 'GET' });
+      if (!resp.ok) throw new Error('Não foi possível baixar o arquivo.');
+
+      const blob = await resp.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = nomeArquivo || 'download';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(blobUrl);
+    }
+
+    async function baixarZip(arquivos) {
+      const resp = await fetch('/download-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ arquivos })
+      });
+
+      if (!resp.ok) throw new Error('Não foi possível baixar o ZIP.');
+
+      const blob = await resp.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      // Pega a data de hoje no formato YYYYMMDD
+      const hoje = new Date();
+      const dataStr = hoje.getFullYear().toString() +
+        (hoje.getMonth() + 1).toString().padStart(2, '0') +
+        hoje.getDate().toString().padStart(2, '0');
+      const nomeZip = `${dataStr}_rv_dsr.zip`;
+
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = nomeZip;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(blobUrl);
+    }
+
+    document.getElementById('formProcessar').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const btn = document.getElementById('btnProcessar');
+      const loading = document.getElementById('loading');
+      const resultado = document.getElementById('resultado');
+
+      btn.disabled = true;
+      loading.style.display = 'block';
+      resultado.style.display = 'none';
+
+      try {
+        const resp = await fetch('/processar', { method: 'POST', body: formData });
+
+        if (!resp.ok) {
+          const maybeJson = await resp.json().catch(() => null);
+          const msg = maybeJson?.error || `Erro HTTP ${resp.status}`;
+          throw new Error(msg);
+        }
+
+        const data = await resp.json();
+
+        if (!data.success) throw new Error(data.error || 'Erro desconhecido');
+
+        // Monta lista de arquivos
+        let arquivosHtml = '';
+        data.arquivos.forEach(arquivo => {
+          const icon = arquivo.includes('log') ? 'fa-file-alt' : 'fa-file-code';
+          arquivosHtml += `
+            <div class="arquivo-item">
+              <span class="arquivo-nome">
+                <i class="fas ${icon}"></i>
+                ${arquivo}
+              </span>
+              <button class="btn-download-mini" onclick="baixarArquivo('/download/${arquivo}', '${arquivo}')">
+                <i class="fas fa-download"></i> Baixar
+              </button>
+            </div>
+          `;
+        });
+
+        resultado.className = 'resultado sucesso';
+        resultado.innerHTML = `
+          <div class="resultado-header">
+            ✅ Processamento Concluído com Sucesso
+          </div>
+
+          <div class="resultado-body">
+            <div class="grid">
+              <div class="card">
+                <div class="value">${data.total}</div>
+                <div class="label">Total Processados</div>
+              </div>
+              <div class="card">
+                <div class="value acionista">${data.acionistas}</div>
+                <div class="label">👔 Acionistas</div>
+              </div>
+              <div class="card">
+                <div class="value clt">${data.clt}</div>
+                <div class="label">👨‍💼 CLT</div>
+              </div>
+              <div class="card">
+                <div class="value ignorado">${data.ignorados}</div>
+                <div class="label">⚠️ Ignorados</div>
+              </div>
+            </div>
+
+            <div class="grid">
+              <div class="card">
+                <div class="value">${data.filiais}</div>
+                <div class="label">📂 Filiais</div>
+              </div>
+              <div class="card">
+                <div class="value">${data.arquivos.length}</div>
+                <div class="label">📄 Arquivos Gerados</div>
+              </div>
+            </div>
+
+            <div class="arquivos-lista">
+              <h3>📥 Arquivos Disponíveis para Download</h3>
+              ${arquivosHtml}
+            </div>
+
+            <button class="download-btn" id="btnBaixarZip">
+              📦 Baixar Todos os Arquivos (ZIP)
+            </button>
+          </div>
+        `;
+
+        // Adiciona evento ao botão de download ZIP
+        document.getElementById('btnBaixarZip').addEventListener('click', () => {
+          baixarZip(data.arquivos);
+        });
+
+        // Download automático do ZIP
+        await baixarZip(data.arquivos);
+
+        // Mostra mensagem de sucesso após o download
+        showSuccessMessage();
+
+      } catch (err) {
+        resultado.className = 'resultado erro';
+        resultado.innerHTML = `
+          <div class="resultado-header">
+            ❌ Erro no Processamento
+          </div>
+          <div class="resultado-body">
+            <p style="color: #666; text-align: center;">${err.message}</p>
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        loading.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

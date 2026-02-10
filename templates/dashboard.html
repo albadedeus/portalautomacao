@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Portal de Automações</title>
+  <link rel="icon" type="image/png" href="/static/logo-hexa.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --totvs-dark: #0d1117;
+      --totvs-navy: #161b22;
+      --totvs-blue: #00d4e5;
+      --totvs-cyan: #00bcd4;
+      --totvs-cyan-dark: #0097a7;
+      --totvs-white: #ffffff;
+      --totvs-gray: #8b949e;
+      --totvs-gray-light: #c9d1d9;
+      --color-success: #2ea043;
+      --color-danger: #f85149;
+      --color-warning: #d29922;
+      --color-financeiro: #ff8900;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.15);
+      --shadow-xl: 0 20px 40px -10px rgba(0,0,0,0.2);
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: var(--totvs-dark);
+      min-height: 100vh;
+      color: var(--totvs-white);
+    }
+
+    /* Header */
+    .header {
+      background: rgba(13, 17, 23, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 0 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; }
+    .logo-img { height: 28px; width: auto; }
+    .logo-text { color: var(--totvs-white); font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.5rem; }
+    .logo-text span { color: var(--totvs-blue); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+    }
+
+    .user-info i {
+      color: var(--totvs-blue);
+    }
+
+    .user-info span {
+      font-size: 0.9rem;
+      color: var(--totvs-gray-light);
+    }
+
+    .btn-logout {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid var(--color-danger);
+      border-radius: 8px;
+      color: var(--color-danger);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-logout:hover {
+      background: var(--color-danger);
+      color: var(--totvs-white);
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 100px 3rem 3rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .welcome-section {
+      margin-bottom: 3rem;
+    }
+
+    .welcome-section h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .welcome-section p {
+      color: var(--totvs-gray);
+      font-size: 1rem;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--totvs-navy);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: var(--transition);
+      text-decoration: none;
+      display: block;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-xl);
+      border-color: rgba(0, 212, 229, 0.2);
+    }
+
+    .card-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-icon i {
+      font-size: 1.5rem;
+      color: var(--totvs-white);
+    }
+
+    .card-icon.blue {
+      background: linear-gradient(135deg, var(--totvs-blue), var(--totvs-cyan-dark));
+    }
+
+    .card-icon.orange {
+      background: linear-gradient(135deg, var(--color-financeiro), #cc6d00);
+    }
+
+    .card-icon.green {
+      background: linear-gradient(135deg, var(--color-success), #1d7a33);
+    }
+
+    .card-icon.purple {
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    }
+
+    .card-icon.teal {
+      background: linear-gradient(135deg, #14b8a6, #0d9488);
+    }
+
+    .card h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--totvs-white);
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: var(--totvs-gray);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .card .card-arrow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      color: var(--totvs-blue);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .card .card-arrow i {
+      transition: var(--transition);
+    }
+
+    .card:hover .card-arrow i {
+      transform: translateX(5px);
+    }
+
+    /* Card Assistido (VM only) */
+    .card.assistido {
+      opacity: 0.85;
+      cursor: default;
+      border: 1px solid rgba(255, 193, 7, 0.15);
+    }
+
+    .card.assistido:hover {
+      transform: none;
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(255, 193, 7, 0.3);
+    }
+
+    .card.assistido .card-arrow {
+      color: var(--totvs-gray);
+    }
+
+    .card.assistido:hover .card-arrow i {
+      transform: none;
+    }
+
+    .card-badge-vm {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(255, 193, 7, 0.15);
+      color: #ffc107;
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    /* Admin Section */
+    .admin-section {
+      margin-top: 3rem;
+    }
+
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--totvs-gray-light);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-title i {
+      color: var(--totvs-blue);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header { padding: 0 1.5rem; }
+      .main-content { padding: 100px 1.5rem 2rem; }
+      .welcome-section h1 { font-size: 1.5rem; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <a href="/dashboard" class="logo">
+      <img src="/static/logo-totvs-branco.png" alt="TOTVS" class="logo-img">
+      <span class="logo-text"><span> | Nordeste</span></span>
+    </a>
+    <div class="header-actions">
+      <div class="user-info">
+        <i class="fas fa-user{% if user.is_admin %}-shield{% endif %}"></i>
+        <span>{{ user.name }}</span>
+      </div>
+      <a href="/logout" class="btn-logout">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </a>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="welcome-section">
+      <h1>Bem-vindo, {{ user.name }}!</h1>
+      <p>Selecione uma opção abaixo para começar</p>
+    </div>
+
+    <div class="cards-grid">
+      <a href="/rv-dsr" class="card">
+        <div class="card-icon blue">
+          <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+        <h2>Processador RV/DSR</h2>
+        <p>Processe arquivos de RV e DSR para geração automática de arquivos TXT por filial.</p>
+        <div class="card-arrow">
+          Acessar <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <a href="/royalties" class="card">
+        <div class="card-icon green">
+          <i class="fas fa-chart-pie"></i>
+        </div>
+        <h2>Automação Royalties</h2>
+        <p>Processe arquivos Excel para classificação automática de royalties por produto e cliente.</p>
+        <div class="card-arrow">
+          Acessar <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <a href="/conciliacao" class="card">
+        <div class="card-icon teal">
+          <i class="fas fa-balance-scale"></i>
+        </div>
+        <h2>Conciliação Contábil / Financeira</h2>
+        <p>Concilie relatórios financeiros e contábeis com geração automática de planilha de revisão.</p>
+        <div class="card-arrow">
+          Acessar <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
+    </div>
+
+    <div class="admin-section">
+      <h3 class="section-title"><i class="fas fa-desktop"></i> Automações Assistidas (VM)</h3>
+      <div class="cards-grid">
+        <div class="card assistido">
+          <div class="card-icon orange">
+            <i class="fas fa-filter"></i>
+          </div>
+          <h2>Automação PSA <span class="card-badge-vm">VM</span></h2>
+          <p>Filtro automático de contratos no Dynamics CRM com preenchimento de pedidos e notas fiscais.</p>
+          <div class="card-arrow">
+            <i class="fas fa-desktop"></i> Automação assistida — executar na VM
+          </div>
+        </div>
+
+        <div class="card assistido">
+          <div class="card-icon orange">
+            <i class="fas fa-robot"></i>
+          </div>
+          <h2>Automação ROIT <span class="card-badge-vm">VM</span></h2>
+          <p>Automação de processos no portal ROIT com preenchimento e envio automático de notas fiscais.</p>
+          <div class="card-arrow">
+            <i class="fas fa-desktop"></i> Automação assistida — executar na VM
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if user.is_admin %}
+    <div class="admin-section">
+      <h3 class="section-title"><i class="fas fa-cog"></i> Administração</h3>
+      <div class="cards-grid">
+        <a href="/admin/usuarios" class="card">
+          <div class="card-icon purple">
+            <i class="fas fa-users-cog"></i>
+          </div>
+          <h2>Gerenciar Usuários</h2>
+          <p>Cadastre, edite e gerencie os usuários do sistema.</p>
+          <div class="card-arrow">
+            Acessar <i class="fas fa-arrow-right"></i>
+          </div>
+        </a>
+
+        <a href="/admin/acionistas" class="card">
+          <div class="card-icon orange">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <h2>Gerenciar Acionistas</h2>
+          <p>Cadastre e edite a lista de acionistas para processamento de RV/DSR.</p>
+          <div class="card-arrow">
+            Acessar <i class="fas fa-arrow-right"></i>
+          </div>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </main>
+</body>
+</html>

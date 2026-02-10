@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Acionistas | Portal de Automações</title>
+  <link rel="icon" type="image/png" href="/static/logo-hexa.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --totvs-dark: #0d1117;
+      --totvs-navy: #161b22;
+      --totvs-blue: #00d4e5;
+      --totvs-cyan: #00bcd4;
+      --totvs-cyan-dark: #0097a7;
+      --totvs-white: #ffffff;
+      --totvs-gray: #8b949e;
+      --totvs-gray-light: #c9d1d9;
+      --color-success: #2ea043;
+      --color-danger: #f85149;
+      --color-warning: #d29922;
+      --color-financeiro: #ff8900;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.15);
+      --shadow-xl: 0 20px 40px -10px rgba(0,0,0,0.2);
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: var(--totvs-dark);
+      min-height: 100vh;
+      color: var(--totvs-white);
+    }
+
+    /* Header */
+    .header {
+      background: rgba(13, 17, 23, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 0 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; }
+    .logo-img { height: 28px; width: auto; }
+    .logo-text { color: var(--totvs-white); font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.5rem; }
+    .logo-text span { color: var(--totvs-blue); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+    }
+
+    .user-info i {
+      color: var(--totvs-blue);
+    }
+
+    .user-info span {
+      font-size: 0.9rem;
+      color: var(--totvs-gray-light);
+    }
+
+    .btn-logout {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid var(--color-danger);
+      border-radius: 8px;
+      color: var(--color-danger);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-logout:hover {
+      background: var(--color-danger);
+      color: var(--totvs-white);
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 100px 3rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .page-title h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+    }
+
+    .page-title h1 i {
+      color: var(--color-financeiro);
+    }
+
+    .btn-add {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, var(--color-financeiro), #cc6d00);
+      border: none;
+      border-radius: 10px;
+      color: var(--totvs-white);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 137, 0, 0.3);
+    }
+
+    /* Info Box */
+    .info-box {
+      background: rgba(255, 137, 0, 0.1);
+      border: 1px solid rgba(255, 137, 0, 0.3);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .info-box i {
+      color: var(--color-financeiro);
+      font-size: 1.25rem;
+    }
+
+    .info-box p {
+      color: var(--totvs-gray-light);
+      font-size: 0.9rem;
+    }
+
+    /* Table */
+    .acionistas-table-container {
+      background: var(--totvs-navy);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .acionistas-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .acionistas-table th,
+    .acionistas-table td {
+      padding: 1rem 1.5rem;
+      text-align: left;
+    }
+
+    .acionistas-table th {
+      background: rgba(0,0,0,0.2);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--totvs-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .acionistas-table tr {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: var(--transition);
+    }
+
+    .acionistas-table tbody tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .acionistas-table td {
+      font-size: 0.95rem;
+      color: var(--totvs-gray-light);
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-active {
+      background: rgba(46, 160, 67, 0.15);
+      color: var(--color-success);
+    }
+
+    .badge-inactive {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--color-danger);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-action {
+      padding: 0.5rem;
+      background: rgba(255,255,255,0.05);
+      border: none;
+      border-radius: 6px;
+      color: var(--totvs-gray-light);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-action:hover {
+      background: rgba(255,255,255,0.1);
+      color: var(--totvs-white);
+    }
+
+    .btn-action.edit:hover {
+      background: rgba(255, 137, 0, 0.2);
+      color: var(--color-financeiro);
+    }
+
+    .btn-action.delete:hover {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--color-danger);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 2rem;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--totvs-navy);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: var(--shadow-xl);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--totvs-gray);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      color: var(--totvs-white);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--totvs-gray-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--totvs-dark);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--totvs-white);
+      transition: var(--transition);
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--color-financeiro);
+    }
+
+    .form-group input::placeholder {
+      color: var(--totvs-gray);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--color-financeiro);
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    .btn-cancel {
+      padding: 0.75rem 1.5rem;
+      background: rgba(255,255,255,0.05);
+      border: none;
+      border-radius: 10px;
+      color: var(--totvs-gray-light);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .btn-save {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, var(--color-financeiro), #cc6d00);
+      border: none;
+      border-radius: 10px;
+      color: var(--totvs-white);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 137, 0, 0.3);
+    }
+
+    .btn-save:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      transform: translateX(150%);
+      transition: var(--transition);
+      z-index: 3000;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      background: var(--color-success);
+      color: var(--totvs-white);
+    }
+
+    .toast.error {
+      background: var(--color-danger);
+      color: var(--totvs-white);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header { padding: 0 1.5rem; }
+      .main-content { padding: 100px 1.5rem 2rem; }
+      .page-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+      .acionistas-table-container { overflow-x: auto; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <a href="/dashboard" class="logo">
+      <img src="/static/logo-totvs-branco.png" alt="TOTVS" class="logo-img">
+      <span class="logo-text"><span> | Nordeste</span></span>
+    </a>
+    <div class="header-actions">
+      <div class="user-info">
+        <i class="fas fa-user-shield"></i>
+        <span>{{ user.name }}</span>
+      </div>
+      <a href="/logout" class="btn-logout">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </a>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div class="page-title">
+        <h1><i class="fas fa-user-tie"></i> Gerenciar Acionistas</h1>
+      </div>
+      <button class="btn-add" onclick="openModal()">
+        <i class="fas fa-plus"></i> Novo Acionista
+      </button>
+    </div>
+
+    <div class="info-box">
+      <i class="fas fa-info-circle"></i>
+      <p>Acionistas utilizam os códigos <strong>390/391</strong> para RV/DSR. Funcionários CLT utilizam <strong>392/393</strong>.</p>
+    </div>
+
+    <div class="acionistas-table-container">
+      <table class="acionistas-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="acionistasTableBody">
+          <!-- Preenchido via JS -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modalTitle">Novo Acionista</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="acionistaForm">
+          <input type="hidden" id="editingNome">
+
+          <div class="form-group">
+            <label for="nome">Nome Completo *</label>
+            <input type="text" id="nome" placeholder="Ex: João da Silva" required>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="isActive" checked>
+              <label for="isActive">Ativo</label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveAcionista()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Mensagem</span>
+  </div>
+
+  <script>
+    let editingAcionista = null;
+
+    // Load acionistas on page load
+    document.addEventListener('DOMContentLoaded', loadAcionistas);
+
+    async function loadAcionistas() {
+      try {
+        const response = await fetch('/api/acionistas');
+        const acionistas = await response.json();
+        renderAcionistas(acionistas);
+      } catch (error) {
+        showToast('Erro ao carregar acionistas', 'error');
+      }
+    }
+
+    function renderAcionistas(acionistas) {
+      const tbody = document.getElementById('acionistasTableBody');
+      tbody.innerHTML = '';
+
+      // Sort by name
+      const sorted = Object.entries(acionistas).sort((a, b) => a[0].localeCompare(b[0]));
+
+      for (const [nome, data] of sorted) {
+        const tr = document.createElement('tr');
+        const isActive = data.active !== false;
+        tr.innerHTML = `
+          <td><strong>${nome}</strong></td>
+          <td><span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? 'Ativo' : 'Inativo'}</span></td>
+          <td class="actions">
+            <button class="btn-action edit" onclick="editAcionista('${nome}')" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-action delete" onclick="deleteAcionista('${nome}')" title="Excluir">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function openModal(acionista = null) {
+      editingAcionista = acionista;
+      document.getElementById('modalOverlay').classList.add('show');
+      document.getElementById('modalTitle').textContent = acionista ? 'Editar Acionista' : 'Novo Acionista';
+
+      // Reset form
+      document.getElementById('acionistaForm').reset();
+      document.getElementById('editingNome').value = '';
+      document.getElementById('isActive').checked = true;
+
+      if (acionista) {
+        document.getElementById('editingNome').value = acionista.nome;
+        document.getElementById('nome').value = acionista.nome;
+        document.getElementById('isActive').checked = acionista.active !== false;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('show');
+      editingAcionista = null;
+    }
+
+    function closeModalOutside(event) {
+      if (event.target === document.getElementById('modalOverlay')) {
+        closeModal();
+      }
+    }
+
+    async function editAcionista(nome) {
+      try {
+        const response = await fetch('/api/acionistas');
+        const acionistas = await response.json();
+        const data = acionistas[nome];
+        if (data !== undefined) {
+          openModal({ nome, active: data.active !== false });
+        }
+      } catch (error) {
+        showToast('Erro ao carregar acionista', 'error');
+      }
+    }
+
+    async function saveAcionista() {
+      const nome = document.getElementById('nome').value.trim();
+      const isActive = document.getElementById('isActive').checked;
+
+      if (!nome) {
+        showToast('Preencha o campo Nome', 'error');
+        return;
+      }
+
+      const data = {
+        nome,
+        active: isActive
+      };
+
+      try {
+        const isEditing = !!editingAcionista;
+        const url = isEditing ? `/api/acionistas/${encodeURIComponent(editingAcionista.nome)}` : '/api/acionistas';
+        const method = isEditing ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast(result.message || 'Acionista salvo com sucesso!', 'success');
+          closeModal();
+          loadAcionistas();
+        } else {
+          showToast(result.error || 'Erro ao salvar acionista', 'error');
+        }
+      } catch (error) {
+        showToast('Erro de conexão', 'error');
+      }
+    }
+
+    async function deleteAcionista(nome) {
+      if (!confirm(`Tem certeza que deseja excluir o acionista "${nome}"?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/acionistas/${encodeURIComponent(nome)}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast('Acionista excluído com sucesso!', 'success');
+          loadAcionistas();
+        } else {
+          showToast(result.error || 'Erro ao excluir acionista', 'error');
+        }
+      } catch (error) {
+        showToast('Erro de conexão', 'error');
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+
+      toastMessage.textContent = message;
+      toast.className = `toast ${type} show`;
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

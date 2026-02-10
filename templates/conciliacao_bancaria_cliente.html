@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conciliação Cliente (NFs x Recebimentos) | TOTVS</title>
+  <link rel="icon" type="image/png" href="/static/logo-hexa.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: #002233;
+      padding: 20px 30px;
+      border-bottom: 3px solid #00dbff;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .header-brand img {
+      height: 24px;
+    }
+
+    .header-back {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid #00dbff;
+      border-radius: 4px;
+      color: #00dbff;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .header-back:hover {
+      background: rgba(0, 219, 255, 0.1);
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    h1 i {
+      color: #00dbff;
+      margin-right: 8px;
+    }
+
+    .subtitle {
+      color: #00dbff;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 25px;
+    }
+
+    .info-box strong {
+      color: #1565c0;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .info-box p {
+      color: #1976d2;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .upload-area {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 15px;
+      background: #fafafa;
+    }
+
+    .upload-area.optional {
+      border-color: #14b8a6;
+      background: #f0fdfa;
+    }
+
+    .upload-area label {
+      display: block;
+      color: #002233;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .upload-area label i {
+      margin-right: 6px;
+      color: #00dbff;
+    }
+
+    .upload-area.optional label i {
+      color: #14b8a6;
+    }
+
+    .optional-badge {
+      font-size: 11px;
+      color: #999;
+      font-weight: 400;
+      margin-left: 8px;
+    }
+
+    small {
+      color: #666;
+      font-size: 12px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    input[type="date"] {
+      display: block;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    input[type="file"] {
+      cursor: pointer;
+    }
+
+    .input-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .input-field label {
+      color: #002233;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+      display: block;
+    }
+
+    .input-field label i {
+      margin-right: 5px;
+      color: #00dbff;
+    }
+
+    button {
+      background: #00dbff;
+      color: #002233;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #00a8cc;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .resultado {
+      margin-top: 25px;
+      border-radius: 6px;
+      display: none;
+      overflow: hidden;
+    }
+
+    .resultado.sucesso {
+      border: 2px solid #00ffd4;
+      display: block;
+    }
+
+    .resultado.erro {
+      border: 2px solid #ff009e;
+      display: block;
+    }
+
+    .resultado-header {
+      padding: 15px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .resultado.sucesso .resultado-header {
+      background: #00ffd4;
+      color: #002233;
+    }
+
+    .resultado.erro .resultado-header {
+      background: #ff009e;
+      color: #fff;
+    }
+
+    .resultado-body {
+      padding: 20px;
+      background: #fff;
+    }
+
+    .section-title {
+      color: #002233;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .section-title i {
+      color: #00dbff;
+      margin-right: 6px;
+    }
+
+    .section-title.optional i {
+      color: #14b8a6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+      border: 1px solid #dee2e6;
+    }
+
+    .card.highlight {
+      background: #002233;
+      border-color: #00dbff;
+    }
+
+    .card.highlight .value {
+      color: #00dbff;
+    }
+
+    .card.highlight .label {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #002233;
+      margin-bottom: 5px;
+    }
+
+    .value.ok { color: #00ffd4; }
+    .value.nao { color: #ff009e; }
+
+    .label {
+      color: #666;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .download-btn {
+      background: #00ffd4;
+      color: #002233;
+      margin-top: 15px;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #00dbff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #002233;
+      font-weight: 500;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 15px;
+      background: #f5f5f5;
+      color: #666;
+      font-size: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .input-group {
+        grid-template-columns: 1fr;
+      }
+      .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <a href="/dashboard" class="header-brand">
+          <img src="/static/logo-totvs-branco.png" alt="TOTVS" onerror="this.style.display='none'" />
+          <span>| Nordeste</span>
+        </a>
+        <a href="/conciliacao" class="header-back">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
+      <h1><i class="fas fa-user-tie"></i>Conciliação Cliente (NFs x Recebimentos)</h1>
+      <p class="subtitle">Comparação de Notas Fiscais com Recebimentos Contábeis</p>
+    </div>
+
+    <div class="content">
+      <div class="info-box">
+        <strong>Como funciona:</strong>
+        <p>
+          Envie a <b>Planilha de Razão Contábil</b> (aba "3-Lançamentos Contábeis") contendo as Notas Fiscais e Recebimentos.
+          Opcionalmente, envie a <b>Planilha Financeira</b> (aba "2-Titulos a receber") para confrontar NFs não matcheadas.
+          Informe o <b>Saldo Inicial</b> e o <b>Intervalo de Datas</b> para análise.
+        </p>
+      </div>
+
+      <form id="formConciliacao" enctype="multipart/form-data">
+        <div class="upload-area">
+          <label>
+            <i class="fas fa-file-excel"></i>Razão Contábil
+          </label>
+          <small>Aba esperada: "3-Lançamentos Contábeis" | Busca por código 008820001 (NFs) e 008850001 (Recebimentos)</small>
+          <input type="file" name="arquivo" id="arquivo" accept=".xlsx,.xls" required />
+        </div>
+
+        <div class="upload-area optional">
+          <label>
+            <i class="fas fa-file-invoice-dollar"></i>Planilha Financeira (Títulos a Receber)
+            <span class="optional-badge">- Opcional</span>
+          </label>
+          <small>Aba esperada: "2-Titulos a receber" | Coluna B = referência das NFs | Saldo = soma col K + col L</small>
+          <input type="file" name="arquivo_financeiro" id="arquivo_financeiro" accept=".xlsx,.xls" />
+        </div>
+
+        <div class="input-group">
+          <div class="input-field">
+            <label>
+              <i class="fas fa-dollar-sign"></i>Saldo Inicial (R$)
+            </label>
+            <input type="text" name="saldo_inicial" id="saldo_inicial" placeholder="0,00" required />
+          </div>
+
+          <div class="input-field">
+            <label>
+              <i class="fas fa-calendar-alt"></i>Data Início
+            </label>
+            <input type="date" name="data_inicio" id="data_inicio" required />
+          </div>
+
+          <div class="input-field">
+            <label>
+              <i class="fas fa-calendar-check"></i>Data Fim
+            </label>
+            <input type="date" name="data_fim" id="data_fim" required />
+          </div>
+        </div>
+
+        <button type="submit" id="btnProcessar">
+          <i class="fas fa-cogs"></i> Processar Conciliação
+        </button>
+      </form>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p class="loading-text">Processando conciliação de NFs x Recebimentos...</p>
+      </div>
+
+      <div class="resultado" id="resultado"></div>
+    </div>
+
+    <div class="footer">
+      Conciliação Cliente | TOTVS Nordeste 2025
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('saldo_inicial').addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      value = (value / 100).toFixed(2);
+      value = value.replace('.', ',');
+      value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+      e.target.value = value;
+    });
+
+    async function baixarArquivo(nomeArquivo) {
+      const resp = await fetch(`/api/conciliacao-cliente/download/${nomeArquivo}`);
+      if (!resp.ok) throw new Error('Erro ao baixar arquivo');
+
+      const blob = await resp.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('formConciliacao').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const btn = document.getElementById('btnProcessar');
+      const loading = document.getElementById('loading');
+      const resultado = document.getElementById('resultado');
+
+      btn.disabled = true;
+      loading.style.display = 'block';
+      resultado.style.display = 'none';
+
+      try {
+        const resp = await fetch('/api/conciliacao-cliente/processar', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await resp.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Erro desconhecido');
+        }
+
+        const resumo = data.resumo;
+
+        resultado.className = 'resultado sucesso';
+        resultado.innerHTML = `
+          <div class="resultado-header">
+            <i class="fas fa-check-circle"></i> Conciliação Concluída
+          </div>
+
+          <div class="resultado-body">
+            <div class="section-title">
+              <i class="fas fa-chart-pie"></i>Resumo Financeiro
+            </div>
+            <div class="grid grid-4">
+              <div class="card">
+                <div class="value">${resumo.saldoInicial}</div>
+                <div class="label">Saldo Inicial</div>
+              </div>
+              <div class="card">
+                <div class="value ok">${resumo.totalNFs}</div>
+                <div class="label">Total NFs</div>
+              </div>
+              <div class="card">
+                <div class="value nao">${resumo.totalRecebimentos}</div>
+                <div class="label">Total Recebimentos</div>
+              </div>
+              <div class="card highlight">
+                <div class="value">${resumo.saldoFinal}</div>
+                <div class="label">Saldo Final</div>
+              </div>
+            </div>
+
+            <div class="section-title">
+              <i class="fas fa-file-invoice"></i>Estatísticas de Processamento
+            </div>
+            <div class="grid grid-4">
+              <div class="card">
+                <div class="value">${resumo.qtdNFs}</div>
+                <div class="label">Qtd. NFs</div>
+              </div>
+              <div class="card">
+                <div class="value">${resumo.qtdRecebimentos}</div>
+                <div class="label">Qtd. Recebimentos</div>
+              </div>
+              <div class="card">
+                <div class="value ok">${resumo.qtdMatches}</div>
+                <div class="label">Matches</div>
+              </div>
+              <div class="card">
+                <div class="value nao">${resumo.qtdNaoEncontrados}</div>
+                <div class="label">Não Encontrados</div>
+              </div>
+            </div>
+
+            ${data.confronto ? `
+            <div class="section-title optional">
+              <i class="fas fa-balance-scale"></i>Confronto com Títulos a Receber
+            </div>
+            <div class="grid grid-3">
+              <div class="card">
+                <div class="value">${data.confronto.saldoInputado}</div>
+                <div class="label">Saldo Inputado</div>
+              </div>
+              <div class="card">
+                <div class="value">${data.confronto.saldoFinanceiro}</div>
+                <div class="label">Saldo Financeiro (K+L)</div>
+              </div>
+              <div class="card">
+                <div class="value">${data.confronto.qtdTitulos}</div>
+                <div class="label">Títulos na Planilha</div>
+              </div>
+            </div>
+            <div class="grid grid-3">
+              <div class="card">
+                <div class="value ok">${data.confronto.qtdEncontrados}</div>
+                <div class="label">NFs Encontradas</div>
+              </div>
+              <div class="card">
+                <div class="value nao">${data.confronto.qtdNaoEncontrados}</div>
+                <div class="label">NFs Não Encontradas</div>
+              </div>
+              <div class="card">
+                <div class="value">${data.confronto.totalNaoMatcheadas}</div>
+                <div class="label">Total NFs Sem Match</div>
+              </div>
+            </div>
+            ` : ''}
+
+            <button class="download-btn" onclick="baixarArquivo('${data.arquivo}')">
+              <i class="fas fa-download"></i> Baixar Planilha de Conciliação
+            </button>
+          </div>
+        `;
+
+        await baixarArquivo(data.arquivo);
+
+      } catch (err) {
+        resultado.className = 'resultado erro';
+        resultado.innerHTML = `
+          <div class="resultado-header">
+            <i class="fas fa-times-circle"></i> Erro no Processamento
+          </div>
+          <div class="resultado-body">
+            <p style="color: #666; text-align: center;">${err.message}</p>
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        loading.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
