@@ -801,6 +801,109 @@ def to_number_ptbr(value):
         return 0.0
 
 
+def to_number_ptbr_series(series):
+    """Converte série pandas com valores brasileiros para numérico"""
+    if pd.api.types.is_numeric_dtype(series):
+        return series.fillna(0)
+    s = series.astype(str).str.strip()
+    s = s.str.replace('\u00a0', '', regex=False)
+    s = s.str.replace(' ', '', regex=False)
+    s = s.str.replace('.', '', regex=False)
+    s = s.str.replace(',', '.', regex=False)
+    return pd.to_numeric(s, errors='coerce').fillna(0)
+
+
+def escolher_coluna_valor(df, palavras_chave):
+    """Escolhe a melhor coluna de valor no DataFrame"""
+    candidatos = []
+    for col in df.columns:
+        low = str(col).lower()
+        if any(p in low for p in palavras_chave):
+            candidatos.append(col)
+
+    for col in candidatos:
+        nums = to_number_ptbr_series(df[col])
+        if nums.abs().sum() > 0:
+            return col
+
+    melhor = None
+    melhor_score = -1.0
+    for col in df.columns:
+        nums = to_number_ptbr_series(df[col])
+        score = float(nums.abs().sum())
+        if score > melhor_score:
+            melhor_score = score
+            melhor = col
+
+    return melhor if melhor_score > 0 else None
+
+
+def escolher_campos_linhas(df):
+    """Escolhe as melhores colunas para agrupar"""
+    cols = df.columns.tolist()
+    escolhidos = []
+
+    for col in cols:
+        low = str(col).lower()
+        if ('cliente' in low) or ('cod' in low) or ('cód' in low) or ('codigo' in low):
+            escolhidos.append(col)
+
+    for col in cols:
+        low = str(col).lower()
+        if ('nome' in low) and ('cliente' not in low):
+            escolhidos.append(col)
+
+    seen = set()
+    escolhidos = [c for c in escolhidos if not (c in seen or seen.add(c))]
+
+    if len(escolhidos) >= 1:
+        return escolhidos
+
+    return cols[:2] if len(cols) >= 2 else cols[:1]
+
+
+def criar_validacao_sim_nao(df, campos_linhas, campo_valor):
+    """Cria tabela de validação agrupando por SIM/NÃO"""
+    temp = df.copy()
+
+    if 'Royalties' not in temp.columns:
+        raise ValueError("Coluna 'Royalties' não existe no DataFrame.")
+    if campo_valor is None or campo_valor not in temp.columns:
+        raise ValueError("Não foi possível identificar a coluna de valor.")
+    for c in campos_linhas:
+        if c not in temp.columns:
+            raise ValueError(f"Coluna '{c}' não existe no DataFrame.")
+
+    temp['Royalties'] = temp['Royalties'].astype(str).str.strip().str.upper()
+    temp['Royalties'] = temp['Royalties'].replace({'NAO': 'NÃO'})
+    temp.loc[~temp['Royalties'].isin(['SIM', 'NÃO']), 'Royalties'] = 'SIM'
+
+    temp[campo_valor] = to_number_ptbr_series(temp[campo_valor])
+
+    agg = (
+        temp.groupby(campos_linhas + ['Royalties'], dropna=False)[campo_valor]
+        .sum()
+        .unstack('Royalties', fill_value=0)
+        .reset_index()
+    )
+
+    if 'SIM' not in agg.columns:
+        agg['SIM'] = 0
+    if 'NÃO' not in agg.columns:
+        agg['NÃO'] = 0
+
+    agg = agg[campos_linhas + ['NÃO', 'SIM']]
+    agg['Total'] = agg['NÃO'] + agg['SIM']
+
+    total_row = {c: 'Total Geral' for c in campos_linhas}
+    total_row['NÃO'] = float(agg['NÃO'].sum())
+    total_row['SIM'] = float(agg['SIM'].sum())
+    total_row['Total'] = float(agg['Total'].sum())
+
+    agg = pd.concat([agg, pd.DataFrame([total_row])], ignore_index=True)
+    return agg
+
+
 def processar_royalties(arquivo_path):
     """Processa arquivo Excel de royalties"""
     config = load_royalties_config()
@@ -844,6 +947,14 @@ def processar_royalties(arquivo_path):
             resultado['fat_nao'] = float(df_nf[df_nf['Royalties'] == 'NÃO']['_valor_num'].sum())
             resultado['fat_total'] = resultado['fat_sim'] + resultado['fat_nao']
 
+        # Gera VALIDAÇÃO FAT
+        try:
+            campos = escolher_campos_linhas(df_nf)
+            valor = escolher_coluna_valor(df_nf, ['total', 'valor'])
+            todas_abas['VALIDAÇÃO FAT'] = criar_validacao_sim_nao(df_nf, campos, valor)
+        except Exception as e:
+            todas_abas['VALIDAÇÃO FAT'] = pd.DataFrame([{'Erro': 'Falha ao criar VALIDAÇÃO FAT', 'Motivo': str(e)}])
+
     # Processa Detalhado Baixas
     if "Detalhado Baixas" in todas_abas:
         df_baixas = todas_abas["Detalhado Baixas"].copy()
@@ -866,6 +977,14 @@ def processar_royalties(arquivo_path):
             resultado['baixas_sim'] = float(df_baixas[df_baixas['Royalties'] == 'SIM']['_valor_num'].sum())
             resultado['baixas_nao'] = float(df_baixas[df_baixas['Royalties'] == 'NÃO']['_valor_num'].sum())
             resultado['baixas_total'] = resultado['baixas_sim'] + resultado['baixas_nao']
+
+        # Gera VALIDAÇÃO BAIXAS
+        try:
+            campos = escolher_campos_linhas(df_baixas)
+            valor = escolher_coluna_valor(df_baixas, ['total', 'valor', 'baixa'])
+            todas_abas['VALIDAÇÃO BAIXAS'] = criar_validacao_sim_nao(df_baixas, campos, valor)
+        except Exception as e:
+            todas_abas['VALIDAÇÃO BAIXAS'] = pd.DataFrame([{'Erro': 'Falha ao criar VALIDAÇÃO BAIXAS', 'Motivo': str(e)}])
 
     # Gera arquivo de saída
     caminho = Path(arquivo_path)
