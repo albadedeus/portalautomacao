@@ -756,79 +756,169 @@ def confrontar_titulos(sistema, arquivo_financeiro_path: str, saldo_inicial_floa
     }
 
 
-def criar_aba_confronto(wb, confronto_data):
-    """Cria aba de confronto com títulos a receber no workbook de saída."""
+def criar_aba_confronto(wb, sistema, confronto_data=None):
+    """Cria aba confrontando NFs x Recebimentos não matcheados pelo número."""
     ws = wb.create_sheet("4-Confronto Financeiro")
 
     header_fill = PatternFill(start_color="0D9488", end_color="0D9488", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
-    ok_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
-    nao_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    section_font = Font(bold=True, size=12, color="0D9488")
+    ambos_fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+    so_nf_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    so_rec_fill = PatternFill(start_color="D6E4F0", end_color="D6E4F0", fill_type="solid")
 
     # Título
-    ws['A1'] = "CONFRONTO: NFs Nao Matcheadas x Titulos a Receber"
+    ws['A1'] = "CONFRONTO: NFs x Recebimentos (Nao Matcheados por Valor)"
     ws['A1'].font = Font(bold=True, size=13, color="0D9488")
     ws.merge_cells('A1:E1')
 
-    # Resumo de saldos
-    ws['A3'] = "Saldo Financeiro (col K + col L):"
-    ws['B3'] = confronto_data['saldo_financeiro']
-    ws['B3'].number_format = '#,##0.00'
-    ws['A3'].font = Font(bold=True)
+    row = 3
 
-    ws['A4'] = "Soma Coluna K (Titulos Vencidos):"
-    ws['B4'] = confronto_data['soma_col_k']
-    ws['B4'].number_format = '#,##0.00'
+    # Resumo financeiro (se disponível)
+    if confronto_data:
+        ws.cell(row, 1, "Saldo Financeiro (col K + col L):")
+        ws.cell(row, 1).font = Font(bold=True)
+        ws.cell(row, 2, confronto_data['saldo_financeiro'])
+        ws.cell(row, 2).number_format = '#,##0.00'
+        row += 1
+        ws.cell(row, 1, "Soma Coluna K (Titulos Vencidos):")
+        ws.cell(row, 2, confronto_data['soma_col_k'])
+        ws.cell(row, 2).number_format = '#,##0.00'
+        row += 1
+        ws.cell(row, 1, "Soma Coluna L (Titulos a Vencer):")
+        ws.cell(row, 2, confronto_data['soma_col_l'])
+        ws.cell(row, 2).number_format = '#,##0.00'
+        row += 2
 
-    ws['A5'] = "Soma Coluna L (Titulos a Vencer):"
-    ws['B5'] = confronto_data['soma_col_l']
-    ws['B5'].number_format = '#,##0.00'
+    # Matching NFs x Recebimentos não matcheados pelo NÚMERO
+    nfs_dict = {nf['numero']: nf for nf in sistema.nao_encontrados_nf}
+    recs_dict = {rec['numero']: rec for rec in sistema.nao_encontrados_rec}
 
-    # Cabeçalho da tabela
-    row = 7
-    headers = ["NF Detalhada", "Valor Liquido (Contabil)", "Ref. Financeiro", "Valor Financeiro", "Diferenca"]
+    em_ambos = []
+    matched_nfs = set()
+    matched_recs = set()
+
+    for num_nf, nf in nfs_dict.items():
+        matched_rec = None
+        matched_key = None
+
+        if num_nf in recs_dict:
+            matched_rec = recs_dict[num_nf]
+            matched_key = num_nf
+        else:
+            nf_sem_zeros = num_nf.lstrip('0')
+            for num_rec, rec in recs_dict.items():
+                if num_rec in matched_recs:
+                    continue
+                if nf_sem_zeros and nf_sem_zeros == num_rec.lstrip('0'):
+                    matched_rec = rec
+                    matched_key = num_rec
+                    break
+
+        if matched_rec:
+            matched_nfs.add(num_nf)
+            matched_recs.add(matched_key)
+            em_ambos.append({
+                'nf_numero': num_nf,
+                'nf_valor': float(nf['valor_liquido']),
+                'rec_numero': matched_key,
+                'rec_valor': float(matched_rec['valor_liquido']),
+                'diferenca': float(nf['valor_liquido']) - float(matched_rec['valor_liquido']),
+            })
+
+    # Seção 1: Mesmo número, valores diferentes (lado a lado)
+    ws.cell(row, 1, "MESMA NF - VALORES DIFERENTES")
+    ws.cell(row, 1).font = section_font
+    row += 1
+
+    headers = ["NF Numero", "Valor NF", "Recebimento", "Valor Recebimento", "Diferenca"]
     for col, h in enumerate(headers, 1):
         cell = ws.cell(row, col, h)
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Encontrados - lado a lado com valor financeiro
     row += 1
-    for item in confronto_data['encontrados']:
+    for item in em_ambos:
         ws.cell(row, 1, item['nf_numero'])
-        ws.cell(row, 2, item['valor_liquido'])
+        ws.cell(row, 2, item['nf_valor'])
         ws.cell(row, 2).number_format = '#,##0.00'
-        ws.cell(row, 3, item['referencia_financeiro'])
-        ws.cell(row, 4, item['valor_financeiro'])
+        ws.cell(row, 3, item['rec_numero'])
+        ws.cell(row, 4, item['rec_valor'])
         ws.cell(row, 4).number_format = '#,##0.00'
-        diferenca = item['valor_liquido'] - item['valor_financeiro']
-        ws.cell(row, 5, diferenca)
+        ws.cell(row, 5, item['diferenca'])
         ws.cell(row, 5).number_format = '#,##0.00'
 
         for col in range(1, 6):
-            ws.cell(row, col).fill = ok_fill
+            ws.cell(row, col).fill = ambos_fill
 
-        if abs(diferenca) > 0.01:
+        if abs(item['diferenca']) > 0.01:
             ws.cell(row, 5).font = Font(bold=True, color="FF0000")
 
         row += 1
 
-    # Não encontrados - só NF e valor contábil
-    for item in confronto_data['nao_encontrados']:
-        ws.cell(row, 1, item['nf_numero'])
-        ws.cell(row, 2, item['valor_liquido'])
-        ws.cell(row, 2).number_format = '#,##0.00'
-
-        for col in range(1, 6):
-            ws.cell(row, col).fill = nao_fill
-
+    if not em_ambos:
+        ws.cell(row, 1, "Nenhuma NF com mesmo numero e valor diferente")
         row += 1
 
-    # Ajustar larguras
-    ws.column_dimensions['A'].width = 20
-    ws.column_dimensions['B'].width = 22
-    ws.column_dimensions['C'].width = 25
+    row += 2
+
+    # Seção 2: NFs sem recebimento correspondente
+    so_nf = [nf for num, nf in nfs_dict.items() if num not in matched_nfs]
+    ws.cell(row, 1, "NFs SEM RECEBIMENTO CORRESPONDENTE")
+    ws.cell(row, 1).font = section_font
+    row += 1
+
+    for col, h in enumerate(["NF Numero", "Valor Liquido"], 1):
+        cell = ws.cell(row, col, h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row += 1
+    for nf in so_nf:
+        ws.cell(row, 1, nf['numero'])
+        ws.cell(row, 2, float(nf['valor_liquido']))
+        ws.cell(row, 2).number_format = '#,##0.00'
+        for col in range(1, 3):
+            ws.cell(row, col).fill = so_nf_fill
+        row += 1
+
+    if not so_nf:
+        ws.cell(row, 1, "Todas as NFs possuem recebimento correspondente")
+        row += 1
+
+    row += 2
+
+    # Seção 3: Recebimentos sem NF correspondente
+    so_rec = [rec for num, rec in recs_dict.items() if num not in matched_recs]
+    ws.cell(row, 1, "RECEBIMENTOS SEM NF CORRESPONDENTE")
+    ws.cell(row, 1).font = section_font
+    row += 1
+
+    for col, h in enumerate(["Recebimento Numero", "Valor Liquido"], 1):
+        cell = ws.cell(row, col, h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row += 1
+    for rec in so_rec:
+        ws.cell(row, 1, rec['numero'])
+        ws.cell(row, 2, float(rec['valor_liquido']))
+        ws.cell(row, 2).number_format = '#,##0.00'
+        for col in range(1, 3):
+            ws.cell(row, col).fill = so_rec_fill
+        row += 1
+
+    if not so_rec:
+        ws.cell(row, 1, "Todos os recebimentos possuem NF correspondente")
+        row += 1
+
+    # Larguras
+    ws.column_dimensions['A'].width = 22
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 22
     ws.column_dimensions['D'].width = 20
     ws.column_dimensions['E'].width = 18
 
@@ -877,7 +967,9 @@ def processar_conciliacao_cliente(arquivo_path: str, saldo_inicial: str = "0",
     if arquivo_financeiro_path and os.path.exists(arquivo_financeiro_path):
         saldo_inicial_float = float(sistema.saldo_inicial)
         confronto_data = confrontar_titulos(sistema, arquivo_financeiro_path, saldo_inicial_float)
-        criar_aba_confronto(sistema.workbook_output, confronto_data)
+
+    # Aba 4: NFs x Recebimentos não matcheados (por número)
+    criar_aba_confronto(sistema.workbook_output, sistema, confronto_data)
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     sistema.workbook_output.save(output_path)
