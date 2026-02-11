@@ -453,6 +453,7 @@
         const percentual = data.percentual || 0;
 
         resultado.className = 'resultado sucesso';
+        resultado.style.display = '';
         resultado.innerHTML = `
           <div class="resultado-header">
             <i class="fas fa-check-circle"></i> Conciliação Concluída
@@ -543,12 +544,14 @@
 
       } catch (err) {
         resultado.className = 'resultado erro';
+        resultado.style.display = '';
+        const msgHtml = err.message.replace(/\n/g, '<br>');
         resultado.innerHTML = `
           <div class="resultado-header">
             <i class="fas fa-times-circle"></i> Erro no Processamento
           </div>
           <div class="resultado-body">
-            <p style="color: #666; text-align: center;">${err.message}</p>
+            <p style="color: #666; text-align: center;">${msgHtml}</p>
           </div>
         `;
       } finally {
