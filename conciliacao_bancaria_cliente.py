@@ -805,6 +805,226 @@ def criar_aba_confronto(wb, confronto_data):
     ws.column_dimensions['D'].width = 30
 
 
+def criar_aba_comparativo(wb, sistema, arquivo_financeiro_path):
+    """Cria aba comparando NFs entre Contábil (aba 3) e Financeiro (aba 2) lado a lado."""
+    ws = wb.create_sheet("5-Comparativo NFs")
+
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    section_font = Font(bold=True, size=12, color="4472C4")
+    ambos_fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+    so_contabil_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    so_financeiro_fill = PatternFill(start_color="D6E4F0", end_color="D6E4F0", fill_type="solid")
+
+    # Carregar aba 2 do financeiro
+    wb_fin = openpyxl.load_workbook(arquivo_financeiro_path, data_only=True)
+    ws_fin = None
+    for sheet_name in wb_fin.sheetnames:
+        if 'Titulos' in sheet_name or 'titulos' in sheet_name or 'TITULOS' in sheet_name or '2-' in sheet_name:
+            ws_fin = wb_fin[sheet_name]
+            break
+
+    if ws_fin is None:
+        return
+
+    # Extrair NFs do financeiro (aba 2): coluna B = ref, K e L = valores
+    nfs_financeiro = {}
+    for row_num in range(2, ws_fin.max_row + 1):
+        col_b = ws_fin.cell(row_num, 2).value
+        col_k = ws_fin.cell(row_num, 11).value
+        col_l = ws_fin.cell(row_num, 12).value
+
+        if col_b is None:
+            continue
+        ref_str = str(col_b).strip()
+        if not ref_str:
+            continue
+
+        valor_k = float(sistema.parse_valor(col_k)) if col_k else 0.0
+        valor_l = float(sistema.parse_valor(col_l)) if col_l else 0.0
+
+        numeros = re.findall(r'\d+', ref_str)
+        nf_num = numeros[0] if numeros else ref_str
+
+        if nf_num in nfs_financeiro:
+            nfs_financeiro[nf_num]['valor_k'] += valor_k
+            nfs_financeiro[nf_num]['valor_l'] += valor_l
+            nfs_financeiro[nf_num]['valor_total'] += valor_k + valor_l
+        else:
+            nfs_financeiro[nf_num] = {
+                'numero': nf_num,
+                'ref_original': ref_str,
+                'valor_k': valor_k,
+                'valor_l': valor_l,
+                'valor_total': valor_k + valor_l,
+            }
+
+    # NFs não matcheadas do contábil (aba 3) - apenas as que não tiveram recebimento correspondente
+    nfs_contabil = {}
+    for nf in sistema.nao_encontrados_nf:
+        nfs_contabil[nf['numero']] = {
+            'numero': nf['numero'],
+            'valor_liquido': float(nf['valor_liquido']),
+        }
+
+    # Fazer matching entre as duas fontes
+    em_ambos = []
+    so_contabil = []
+    so_financeiro_list = []
+    financeiro_matcheados = set()
+
+    for num_nf, nf_cont in nfs_contabil.items():
+        matched_fin = None
+        matched_key = None
+
+        # Match direto
+        if num_nf in nfs_financeiro:
+            matched_fin = nfs_financeiro[num_nf]
+            matched_key = num_nf
+        else:
+            # Sem zeros a esquerda
+            nf_sem_zeros = num_nf.lstrip('0')
+            for num_fin, nf_fin in nfs_financeiro.items():
+                if num_fin in financeiro_matcheados:
+                    continue
+                fin_sem_zeros = num_fin.lstrip('0')
+                if nf_sem_zeros and nf_sem_zeros == fin_sem_zeros:
+                    matched_fin = nf_fin
+                    matched_key = num_fin
+                    break
+
+            # Match parcial
+            if not matched_fin:
+                for num_fin, nf_fin in nfs_financeiro.items():
+                    if num_fin in financeiro_matcheados:
+                        continue
+                    if num_nf in nf_fin['ref_original'] or num_fin in num_nf:
+                        matched_fin = nf_fin
+                        matched_key = num_fin
+                        break
+
+        if matched_fin:
+            financeiro_matcheados.add(matched_key)
+            em_ambos.append({
+                'nf_contabil': num_nf,
+                'valor_contabil': nf_cont['valor_liquido'],
+                'nf_financeiro': matched_fin['numero'],
+                'ref_financeiro': matched_fin['ref_original'],
+                'valor_financeiro': matched_fin['valor_total'],
+                'diferenca': nf_cont['valor_liquido'] - matched_fin['valor_total'],
+            })
+        else:
+            so_contabil.append(nf_cont)
+
+    for num_fin, nf_fin in nfs_financeiro.items():
+        if num_fin not in financeiro_matcheados:
+            so_financeiro_list.append(nf_fin)
+
+    # === Escrever aba ===
+    ws['A1'] = "COMPARATIVO: NFs Nao Matcheadas (Aba 3) x Financeiro (Aba 2)"
+    ws['A1'].font = Font(bold=True, size=13, color="4472C4")
+    ws.merge_cells('A1:F1')
+
+    row = 3
+
+    # Secao 1: Em ambos (lado a lado)
+    ws.cell(row, 1, "NFs ENCONTRADAS EM AMBAS AS ABAS")
+    ws.cell(row, 1).font = section_font
+    row += 1
+
+    headers = ["NF (Contabil)", "Valor Contabil", "NF (Financeiro)", "Ref. Original", "Valor Financeiro", "Diferenca"]
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row, col, h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row += 1
+    for item in em_ambos:
+        ws.cell(row, 1, item['nf_contabil'])
+        ws.cell(row, 2, item['valor_contabil'])
+        ws.cell(row, 2).number_format = '#,##0.00'
+        ws.cell(row, 3, item['nf_financeiro'])
+        ws.cell(row, 4, item['ref_financeiro'])
+        ws.cell(row, 5, item['valor_financeiro'])
+        ws.cell(row, 5).number_format = '#,##0.00'
+        ws.cell(row, 6, item['diferenca'])
+        ws.cell(row, 6).number_format = '#,##0.00'
+
+        for col in range(1, 7):
+            ws.cell(row, col).fill = ambos_fill
+
+        if abs(item['diferenca']) > 0.01:
+            ws.cell(row, 6).font = Font(bold=True, color="FF0000")
+
+        row += 1
+
+    if not em_ambos:
+        ws.cell(row, 1, "Nenhuma NF encontrada em ambas as abas")
+        row += 1
+
+    row += 2
+
+    # Secao 2: Somente no Contabil (aba 3)
+    ws.cell(row, 1, "NFs SOMENTE NA ABA CONTABIL (Aba 3)")
+    ws.cell(row, 1).font = section_font
+    row += 1
+
+    for col, h in enumerate(["NF Numero", "Valor Liquido"], 1):
+        cell = ws.cell(row, col, h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row += 1
+    for nf in so_contabil:
+        ws.cell(row, 1, nf['numero'])
+        ws.cell(row, 2, nf['valor_liquido'])
+        ws.cell(row, 2).number_format = '#,##0.00'
+        for col in range(1, 3):
+            ws.cell(row, col).fill = so_contabil_fill
+        row += 1
+
+    if not so_contabil:
+        ws.cell(row, 1, "Todas as NFs contabeis foram encontradas no financeiro")
+        row += 1
+
+    row += 2
+
+    # Secao 3: Somente no Financeiro (aba 2)
+    ws.cell(row, 1, "NFs SOMENTE NA ABA FINANCEIRA (Aba 2)")
+    ws.cell(row, 1).font = section_font
+    row += 1
+
+    for col, h in enumerate(["NF Numero", "Ref. Original", "Valor (K+L)"], 1):
+        cell = ws.cell(row, col, h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row += 1
+    for nf in so_financeiro_list:
+        ws.cell(row, 1, nf['numero'])
+        ws.cell(row, 2, nf['ref_original'])
+        ws.cell(row, 3, nf['valor_total'])
+        ws.cell(row, 3).number_format = '#,##0.00'
+        for col in range(1, 4):
+            ws.cell(row, col).fill = so_financeiro_fill
+        row += 1
+
+    if not so_financeiro_list:
+        ws.cell(row, 1, "Todas as NFs financeiras foram encontradas no contabil")
+        row += 1
+
+    # Larguras
+    ws.column_dimensions['A'].width = 20
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 20
+    ws.column_dimensions['D'].width = 25
+    ws.column_dimensions['E'].width = 20
+    ws.column_dimensions['F'].width = 18
+
+
 def processar_conciliacao_cliente(arquivo_path: str, saldo_inicial: str = "0",
                                    data_inicio: str = "", data_fim: str = "",
                                    output_path: str = "output.xlsx",
@@ -850,6 +1070,7 @@ def processar_conciliacao_cliente(arquivo_path: str, saldo_inicial: str = "0",
         saldo_inicial_float = float(sistema.saldo_inicial)
         confronto_data = confrontar_titulos(sistema, arquivo_financeiro_path, saldo_inicial_float)
         criar_aba_confronto(sistema.workbook_output, confronto_data)
+        criar_aba_comparativo(sistema.workbook_output, sistema, arquivo_financeiro_path)
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     sistema.workbook_output.save(output_path)
