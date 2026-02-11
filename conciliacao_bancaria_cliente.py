@@ -790,6 +790,59 @@ def criar_aba_confronto(wb, sistema, confronto_data=None):
         ws.cell(row, 2).number_format = '#,##0.00'
         row += 2
 
+    # Seção: NFs encontradas no financeiro (se disponível)
+    if confronto_data and confronto_data['encontrados']:
+        ws.cell(row, 1, "NFs ENCONTRADAS NO FINANCEIRO")
+        ws.cell(row, 1).font = section_font
+        row += 1
+
+        enc_headers = ["NF Numero", "Valor Liquido", "Status", "Referencia Financeiro"]
+        for col, h in enumerate(enc_headers, 1):
+            cell = ws.cell(row, col, h)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        ok_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+        row += 1
+        for item in confronto_data['encontrados']:
+            ws.cell(row, 1, item['nf_numero'])
+            ws.cell(row, 2, item['valor_liquido'])
+            ws.cell(row, 2).number_format = '#,##0.00'
+            ws.cell(row, 3, item['status'])
+            ws.cell(row, 4, item['referencia_financeiro'])
+            for col in range(1, 5):
+                ws.cell(row, col).fill = ok_fill
+            row += 1
+
+        row += 2
+
+    # Seção: NFs NÃO encontradas no financeiro (se disponível)
+    if confronto_data and confronto_data['nao_encontrados']:
+        ws.cell(row, 1, "NFs NAO ENCONTRADAS NO FINANCEIRO")
+        ws.cell(row, 1).font = section_font
+        row += 1
+
+        nenc_headers = ["NF Numero", "Valor Liquido", "Status"]
+        for col, h in enumerate(nenc_headers, 1):
+            cell = ws.cell(row, col, h)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        nao_enc_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+        row += 1
+        for item in confronto_data['nao_encontrados']:
+            ws.cell(row, 1, item['nf_numero'])
+            ws.cell(row, 2, item['valor_liquido'])
+            ws.cell(row, 2).number_format = '#,##0.00'
+            ws.cell(row, 3, item['status'])
+            for col in range(1, 4):
+                ws.cell(row, col).fill = nao_enc_fill
+            row += 1
+
+        row += 2
+
     # Matching NFs x Recebimentos não matcheados pelo NÚMERO
     nfs_dict = {nf['numero']: nf for nf in sistema.nao_encontrados_nf}
     recs_dict = {rec['numero']: rec for rec in sistema.nao_encontrados_rec}
