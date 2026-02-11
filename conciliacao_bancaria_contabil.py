@@ -143,7 +143,16 @@ def ler_financeiro(financeiro_path: str) -> tuple:
       OPERACAO, PREFIXO/TITULO, ENTRADAS, SAIDAS
     DATA e opcional (se existir, melhora match)
     """
-    df_raw = pd.read_excel(financeiro_path, sheet_name="2-Totais")
+    try:
+        df_raw = pd.read_excel(financeiro_path, sheet_name="2-Totais")
+    except ValueError:
+        xls = pd.ExcelFile(financeiro_path)
+        abas = ', '.join(xls.sheet_names)
+        raise ValueError(
+            f"[Relatorio Financeiro] Aba '2-Totais' nao encontrada!\n\n"
+            f"Abas disponiveis no arquivo: {abas}\n\n"
+            f"Verifique se voce selecionou o arquivo correto no campo 'Financeiro'."
+        )
     df = _promover_header(df_raw, required_cols=["OPERACAO", "PREFIXO/TITULO", "ENTRADAS", "SAIDAS"])
 
     obrig = ["OPERACAO", "PREFIXO/TITULO", "ENTRADAS", "SAIDAS"]
@@ -152,7 +161,11 @@ def ler_financeiro(financeiro_path: str) -> tuple:
 
     for col in obrig:
         if col not in df.columns:
-            raise ValueError(f"[Relatorio Financeiro] Coluna '{col}' nao encontrada. Colunas: {list(df.columns)}")
+            raise ValueError(
+                f"[Relatorio Financeiro] Coluna '{col}' nao encontrada!\n\n"
+                f"Colunas esperadas: OPERACAO, PREFIXO/TITULO, ENTRADAS, SAIDAS\n"
+                f"Colunas encontradas: {list(df.columns)}"
+            )
 
     df["TEXTO_FIN"] = df["PREFIXO/TITULO"].fillna("").astype(str).str.strip()
     vazio = df["TEXTO_FIN"].eq("") | df["TEXTO_FIN"].str.lower().eq("nan")
@@ -194,7 +207,13 @@ def _encontrar_aba(xl_file: pd.ExcelFile, nomes_possiveis: list) -> str:
                 return sheet
             if nome and nome[0].isdigit() and sheet and sheet[0] == nome[0]:
                 return sheet
-    raise ValueError(f"Nenhuma aba encontrada. Abas: {xl_file.sheet_names}. Procurados: {nomes_possiveis}")
+    abas = ', '.join(xl_file.sheet_names)
+    raise ValueError(
+        f"Nenhuma aba compativel encontrada!\n\n"
+        f"O sistema procura abas com nomes como: {', '.join(nomes_possiveis)}\n"
+        f"Abas encontradas no arquivo: {abas}\n\n"
+        f"Verifique se voce selecionou o arquivo correto."
+    )
 
 
 def ler_contabil(contabil_path: str) -> tuple:
@@ -215,7 +234,11 @@ def ler_contabil(contabil_path: str) -> tuple:
 
     for col in obrig:
         if col not in df.columns:
-            raise ValueError(f"[Relatorio Contabil] Coluna '{col}' nao encontrada. Colunas: {list(df.columns)}")
+            raise ValueError(
+                f"[Relatorio Contabil] Coluna '{col}' nao encontrada!\n\n"
+                f"Colunas esperadas: HISTORICO, DEBITO, CREDITO\n"
+                f"Colunas encontradas: {list(df.columns)}"
+            )
 
     df["HIST_TXT"] = df["HISTORICO"].fillna("").astype(str).str.strip()
     df["HIST_NORM"] = df["HIST_TXT"].apply(normalizar_texto)

@@ -190,7 +190,13 @@ class ConciliacaoCliente:
                 break
         
         if ws is None:
-            raise Exception("Aba de Lançamentos Contábeis não encontrada!")
+            abas = ', '.join(self.workbook_input.sheetnames)
+            raise Exception(
+                f"Aba de Lançamentos Contábeis não encontrada!\n\n"
+                f"O sistema procura uma aba com 'Lançamentos Contábeis' no nome.\n"
+                f"Abas encontradas no arquivo: {abas}\n\n"
+                f"Verifique se você selecionou o arquivo correto no campo 'Razão Contábil'."
+            )
         
         # Cabeçalho está na linha 2, dados começam na linha 3
         header_row = 2
@@ -642,7 +648,13 @@ def confrontar_titulos(sistema, arquivo_financeiro_path: str, saldo_inicial_floa
             break
 
     if ws is None:
-        raise Exception(f"Aba de Títulos a Receber não encontrada! Abas disponíveis: {wb_fin.sheetnames}")
+        abas = ', '.join(wb_fin.sheetnames)
+        raise Exception(
+            f"Aba de Títulos a Receber não encontrada!\n\n"
+            f"O sistema procura uma aba com 'Titulos' ou '2-' no nome.\n"
+            f"Abas encontradas no arquivo: {abas}\n\n"
+            f"Verifique se você selecionou o arquivo correto no campo 'Planilha Financeira'."
+        )
 
     # Ler dados da planilha financeira
     # Header na linha 1 ou 2, dados a partir da próxima
