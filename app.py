@@ -5,7 +5,7 @@ PROCESSADOR RV E DSR - BACKEND WEB
 Sistema com autenticação e gerenciamento de usuários/acionistas
 """
 
-from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory, redirect, url_for, session
 from functools import wraps
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -406,6 +406,10 @@ def index():
     if 'user' in session:
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    return send_from_directory('assets', filename)
 
 @app.route('/login')
 def login():

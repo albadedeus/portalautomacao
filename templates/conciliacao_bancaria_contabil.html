@@ -8,6 +8,27 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
+    @font-face {
+      font-family: 'TOTVS-Bold';
+      src: url('/assets/fonts/TOTVS-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --totvs-font: 'TOTVS-Bold', sans-serif;
+      --color-blue-light: #00DBFF;
+      --color-blue-dark: #002233;
+      --color-purple: #A44DFF;
+      --color-green: #00FFD4;
+      --color-lime: #D9FF65;
+      --color-orange: #FF8900;
+      --color-pink: #FF009E;
+      --totvs-white: #ffffff;
+      --totvs-black: #000000;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -15,25 +36,25 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f5f5;
+      font-family: var(--totvs-font);
+      background: var(--totvs-white);
       min-height: 100vh;
       padding: 20px;
     }
 
     .container {
-      background: #fff;
+      background: var(--totvs-white);
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      max-width: 900px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      max-width: 1500px;
       width: 100%;
       margin: 0 auto;
     }
 
     .header {
-      background: #002233;
+      background: var(--color-blue-dark);
       padding: 20px 30px;
-      border-bottom: 3px solid #00dbff;
+      border-bottom: 3px solid var(--color-blue-light);
     }
 
     .header-top {
@@ -50,19 +71,19 @@
       align-items: center;
       gap: 10px;
       text-decoration: none;
-      color: #fff;
+      color: var(--totvs-white);
     }
 
     .header-brand img {
-      height: 24px;
+      height: 36px;
     }
 
     .header-back {
       padding: 8px 16px;
       background: transparent;
-      border: 1px solid #00dbff;
+      border: 1px solid var(--color-blue-light);
       border-radius: 4px;
-      color: #00dbff;
+      color: var(--color-blue-light);
       font-size: 14px;
       cursor: pointer;
       text-decoration: none;
@@ -80,12 +101,12 @@
     }
 
     h1 i {
-      color: #00dbff;
+      color: var(--color-blue-light);
       margin-right: 8px;
     }
 
     .subtitle {
-      color: #00dbff;
+      color: var(--color-blue-light);
       font-size: 14px;
     }
 
@@ -94,36 +115,36 @@
     }
 
     .info-box {
-      background: #e3f2fd;
-      border: 1px solid #90caf9;
+      background: rgba(0,219,255,0.06);
+      border: 1px solid rgba(0,219,255,0.14);
       border-radius: 6px;
       padding: 15px;
       margin-bottom: 25px;
     }
 
     .info-box strong {
-      color: #1565c0;
+      color: var(--color-blue-dark);
       display: block;
       margin-bottom: 5px;
     }
 
     .info-box p {
-      color: #1976d2;
+      color: var(--color-blue-dark);
       font-size: 13px;
       line-height: 1.5;
     }
 
     .upload-area {
-      border: 1px solid #ddd;
+      border: 1px solid rgba(0,0,0,0.08);
       border-radius: 6px;
       padding: 20px;
       margin-bottom: 15px;
-      background: #fafafa;
+      background: var(--totvs-white);
     }
 
     .upload-area label {
       display: block;
-      color: #002233;
+      color: var(--color-blue-dark);
       font-weight: 600;
       margin-bottom: 8px;
       font-size: 15px;
@@ -131,11 +152,11 @@
 
     .upload-area label i {
       margin-right: 6px;
-      color: #00dbff;
+      color: var(--color-blue-light);
     }
 
     small {
-      color: #666;
+      color: rgba(0,0,0,0.6);
       font-size: 12px;
       display: block;
       margin-bottom: 10px;
@@ -144,7 +165,7 @@
     input[type="file"] {
       display: block;
       padding: 10px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--color-blue-light);
       border-radius: 4px;
       width: 100%;
       background: #fff;
@@ -153,8 +174,8 @@
     }
 
     button {
-      background: #00dbff;
-      color: #002233;
+      background: var(--color-blue-light);
+      color: var(--color-blue-dark);
       border: none;
       padding: 14px 30px;
       border-radius: 4px;
@@ -166,7 +187,7 @@
     }
 
     button:hover {
-      background: #00a8cc;
+      background: var(--color-blue-light);
     }
 
     button:disabled {
@@ -182,12 +203,12 @@
     }
 
     .resultado.sucesso {
-      border: 2px solid #00ffd4;
+      border: 2px solid var(--color-green);
       display: block;
     }
 
     .resultado.erro {
-      border: 2px solid #ff009e;
+      border: 2px solid var(--color-pink);
       display: block;
     }
 
@@ -199,13 +220,13 @@
     }
 
     .resultado.sucesso .resultado-header {
-      background: #00ffd4;
-      color: #002233;
+      background: var(--color-green);
+      color: var(--color-blue-dark);
     }
 
     .resultado.erro .resultado-header {
-      background: #ff009e;
-      color: #fff;
+      background: var(--color-pink);
+      color: var(--totvs-white);
     }
 
     .resultado-body {
@@ -214,16 +235,16 @@
     }
 
     .section-title {
-      color: #002233;
+      color: var(--color-blue-dark);
       font-size: 14px;
       font-weight: 600;
       margin-bottom: 12px;
       padding-bottom: 8px;
-      border-bottom: 1px solid #e0e0e0;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
     }
 
     .section-title i {
-      color: #00dbff;
+      color: var(--color-blue-light);
       margin-right: 6px;
     }
 
@@ -243,20 +264,20 @@
     }
 
     .card {
-      background: #f8f9fa;
+      background: var(--totvs-white);
       padding: 15px;
       border-radius: 6px;
       text-align: center;
-      border: 1px solid #dee2e6;
+      border: 1px solid rgba(0,0,0,0.08);
     }
 
     .card.highlight {
-      background: #002233;
-      border-color: #00dbff;
+      background: var(--color-blue-dark);
+      border-color: var(--color-blue-light);
     }
 
     .card.highlight .value {
-      color: #00dbff;
+      color: var(--color-blue-light);
     }
 
     .card.highlight .label {
@@ -266,27 +287,27 @@
     .value {
       font-size: 20px;
       font-weight: 700;
-      color: #002233;
+      color: var(--color-blue-dark);
       margin-bottom: 5px;
     }
 
-    .value.ok { color: #00ffd4; }
-    .value.nao { color: #ff009e; }
-    .value.total { color: #a44dff; }
-    .value.revisar { color: #ff8900; }
-    .value.positivo { color: #00ffd4; }
-    .value.negativo { color: #ff009e; }
+    .value.ok { color: var(--color-green); }
+    .value.nao { color: var(--color-pink); }
+    .value.total { color: var(--color-purple); }
+    .value.revisar { color: var(--color-orange); }
+    .value.positivo { color: var(--color-green); }
+    .value.negativo { color: var(--color-pink); }
 
     .label {
-      color: #666;
+      color: rgba(0,0,0,0.6);
       font-size: 11px;
       font-weight: 500;
       text-transform: uppercase;
     }
 
     .download-btn {
-      background: #00ffd4;
-      color: #002233;
+      background: var(--color-green);
+      color: var(--color-blue-dark);
       margin-top: 15px;
       text-decoration: none;
       display: block;
@@ -301,8 +322,8 @@
     }
 
     .spinner {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #00dbff;
+      border: 3px solid rgba(0,0,0,0.04);
+      border-top: 3px solid var(--color-blue-light);
       border-radius: 50%;
       width: 40px;
       height: 40px;
@@ -316,20 +337,20 @@
     }
 
     .loading-text {
-      color: #002233;
+      color: var(--color-blue-dark);
       font-weight: 500;
     }
 
     .footer {
       text-align: center;
       padding: 15px;
-      background: #f5f5f5;
-      color: #666;
+      background: var(--totvs-white);
+      color: rgba(0,0,0,0.6);
       font-size: 12px;
     }
 
     .percentual-bar {
-      background: #e0e0e0;
+      background: rgba(0,0,0,0.08);
       border-radius: 4px;
       height: 18px;
       overflow: hidden;
@@ -338,13 +359,65 @@
 
     .percentual-fill {
       height: 100%;
-      background: #00ffd4;
-      color: #002233;
+      background: var(--color-green);
+      color: var(--color-blue-dark);
       font-size: 11px;
       font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    /* Tema escuro padrao do portal */
+    body {
+      background: var(--color-blue-dark);
+      color: var(--totvs-white);
+    }
+    .container {
+      background: linear-gradient(180deg, rgba(0,34,51,0.97), rgba(0,34,51,0.93));
+      border: 1px solid rgba(0, 219, 255, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+    .content,
+    .resultado-body {
+      background: rgba(0, 34, 51, 0.88);
+    }
+    .info-box {
+      background: rgba(0, 219, 255, 0.08);
+      border-color: rgba(0, 219, 255, 0.28);
+    }
+    .info-box strong,
+    .info-box p,
+    .upload-area label,
+    .section-title,
+    .value,
+    .loading-text {
+      color: var(--totvs-white);
+    }
+    small,
+    .label {
+      color: rgba(255, 255, 255, 0.72);
+    }
+    .upload-area,
+    .card,
+    .footer {
+      background: rgba(0, 34, 51, 0.78);
+      border-color: rgba(0, 219, 255, 0.22);
+      color: rgba(255, 255, 255, 0.92);
+    }
+    input[type="file"] {
+      background: rgba(0, 34, 51, 0.9);
+      color: var(--totvs-white);
+      border-color: rgba(0, 219, 255, 0.5);
+    }
+    .section-title {
+      border-bottom-color: rgba(0, 219, 255, 0.2);
+    }
+    .percentual-bar {
+      background: rgba(0, 219, 255, 0.12);
+    }
+    .footer {
+      border-top: 1px solid rgba(0, 219, 255, 0.2);
     }
   </style>
 </head>
@@ -353,8 +426,8 @@
     <div class="header">
       <div class="header-top">
         <a href="/dashboard" class="header-brand">
-          <img src="/static/logo-totvs-branco.png" alt="TOTVS" onerror="this.style.display='none'" />
-          <span>| Nordeste</span>
+          <img src="/assets/img/TOTVS%20Nordeste%20-%20Logo%20-%20Branco.png" alt="TOTVS Nordeste" onerror="this.style.display='none'" />
+          
         </a>
         <a href="/conciliacao" class="header-back">
           <i class="fas fa-arrow-left"></i> Voltar
@@ -551,7 +624,7 @@
             <i class="fas fa-times-circle"></i> Erro no Processamento
           </div>
           <div class="resultado-body">
-            <p style="color: #666; text-align: center;">${msgHtml}</p>
+            <p style="color: var(--color-blue-light); text-align: center;">${msgHtml}</p>
           </div>
         `;
       } finally {
@@ -562,3 +635,10 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+

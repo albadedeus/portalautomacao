@@ -5,23 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard | Portal de Automações</title>
   <link rel="icon" type="image/png" href="/static/logo-hexa.png">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
+    @font-face {
+      font-family: 'TOTVS-Bold';
+      src: url('/assets/fonts/TOTVS-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
     :root {
-      --totvs-dark: #0d1117;
-      --totvs-navy: #161b22;
-      --totvs-blue: #00d4e5;
-      --totvs-cyan: #00bcd4;
-      --totvs-cyan-dark: #0097a7;
+      --font-sans: 'TOTVS-Bold', sans-serif;
+      --color-blue-light: #00DBFF; /* azul claro */
+      --color-blue-dark: #002233;  /* azul escuro */
+      --color-purple: #A44DFF;    /* roxo */
+      --color-green: #00FFD4;     /* verde */
+      --color-lime: #D9FF65;      /* limão */
+      --color-orange: #FF8900;    /* laranja */
+      --color-pink: #FF009E;      /* rosa */
       --totvs-white: #ffffff;
-      --totvs-gray: #8b949e;
-      --totvs-gray-light: #c9d1d9;
-      --color-success: #2ea043;
-      --color-danger: #f85149;
-      --color-warning: #d29922;
-      --color-financeiro: #ff8900;
+      --totvs-black: #000000;
+      --totvs-navy: #002233;
+      --totvs-blue: #00DBFF;
+      --totvs-cyan-dark: #00FFD4;
+      --totvs-gray: rgba(255,255,255,0.78);
+      --totvs-gray-light: rgba(255,255,255,0.92);
+      --color-success: var(--color-green);
+      --color-danger: var(--color-pink);
+      --color-warning: var(--color-orange);
+      --color-financeiro: var(--color-orange);
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
       --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.15);
@@ -30,15 +44,15 @@
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Open Sans', sans-serif;
-      background: var(--totvs-dark);
+      font-family: var(--font-sans);
+      background: var(--color-blue-dark);
       min-height: 100vh;
       color: var(--totvs-white);
     }
 
     /* Header */
     .header {
-      background: rgba(13, 17, 23, 0.95);
+      background: rgba(0, 34, 51, 0.95);
       backdrop-filter: blur(10px);
       padding: 0 3rem;
       display: flex;
@@ -51,9 +65,9 @@
       box-shadow: 0 2px 20px rgba(0,0,0,0.3);
     }
     .logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; }
-    .logo-img { height: 28px; width: auto; }
-    .logo-text { color: var(--totvs-white); font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.5rem; }
-    .logo-text span { color: var(--totvs-blue); }
+    .logo-img { height: 44px; width: auto; display: block; }
+    .logo-text { color: var(--totvs-white); font-family: var(--font-sans); font-weight: 800; font-size: 1.5rem; }
+    .logo-text span { color: var(--color-blue-light); }
 
     .header-actions {
       display: flex;
@@ -85,7 +99,7 @@
       border: 1px solid var(--color-danger);
       border-radius: 8px;
       color: var(--color-danger);
-      font-family: 'Montserrat', sans-serif;
+      font-family: inherit;
       font-weight: 600;
       font-size: 0.85rem;
       cursor: pointer;
@@ -104,7 +118,7 @@
     /* Main Content */
     .main-content {
       padding: 100px 3rem 3rem;
-      max-width: 1400px;
+      max-width: 1650px;
       margin: 0 auto;
     }
 
@@ -113,7 +127,7 @@
     }
 
     .welcome-section h1 {
-      font-family: 'Montserrat', sans-serif;
+      font-family: inherit;
       font-size: 2rem;
       font-weight: 800;
       margin-bottom: 0.5rem;
@@ -128,15 +142,15 @@
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
     .card {
-      background: var(--totvs-navy);
-      border-radius: 16px;
-      padding: 2rem;
+      background: linear-gradient(180deg, rgba(0,34,51,0.95), rgba(0,34,51,0.9));
+      border-radius: 18px;
+      padding: 1.8rem;
       box-shadow: var(--shadow-lg);
-      border: 1px solid rgba(255,255,255,0.05);
+      border: 1px solid rgba(0, 219, 255, 0.16);
       transition: var(--transition);
       text-decoration: none;
       display: block;
@@ -145,7 +159,7 @@
     .card:hover {
       transform: translateY(-5px);
       box-shadow: var(--shadow-xl);
-      border-color: rgba(0, 212, 229, 0.2);
+      border-color: rgba(0, 219, 255, 0.4);
     }
 
     .card-icon {
@@ -168,23 +182,23 @@
     }
 
     .card-icon.orange {
-      background: linear-gradient(135deg, var(--color-financeiro), #cc6d00);
+      background: linear-gradient(135deg, var(--color-financeiro), var(--color-orange));
     }
 
     .card-icon.green {
-      background: linear-gradient(135deg, var(--color-success), #1d7a33);
+      background: linear-gradient(135deg, var(--color-success), var(--color-green));
     }
 
     .card-icon.purple {
-      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      background: linear-gradient(135deg, var(--color-purple), var(--color-purple));
     }
 
     .card-icon.teal {
-      background: linear-gradient(135deg, #14b8a6, #0d9488);
+      background: linear-gradient(135deg, var(--color-green), var(--color-green));
     }
 
     .card h2 {
-      font-family: 'Montserrat', sans-serif;
+      font-family: inherit;
       font-size: 1.25rem;
       font-weight: 700;
       color: var(--totvs-white);
@@ -192,7 +206,7 @@
     }
 
     .card p {
-      color: var(--totvs-gray);
+      color: var(--totvs-gray-light);
       font-size: 0.9rem;
       line-height: 1.5;
     }
@@ -202,7 +216,7 @@
       align-items: center;
       gap: 0.5rem;
       margin-top: 1.5rem;
-      color: var(--totvs-blue);
+      color: var(--color-blue-light);
       font-weight: 600;
       font-size: 0.9rem;
     }
@@ -217,19 +231,19 @@
 
     /* Card Assistido (VM only) */
     .card.assistido {
-      opacity: 0.85;
+      opacity: 0.92;
       cursor: default;
-      border: 1px solid rgba(255, 193, 7, 0.15);
+      border: 1px solid rgba(255, 137, 0, 0.3);
     }
 
     .card.assistido:hover {
       transform: none;
       box-shadow: var(--shadow-lg);
-      border-color: rgba(255, 193, 7, 0.3);
+      border-color: rgba(255, 137, 0, 0.3);
     }
 
     .card.assistido .card-arrow {
-      color: var(--totvs-gray);
+      color: var(--totvs-gray-light);
     }
 
     .card.assistido:hover .card-arrow i {
@@ -244,9 +258,9 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      background: rgba(255, 193, 7, 0.15);
-      color: #ffc107;
-      border: 1px solid rgba(255, 193, 7, 0.3);
+      background: rgba(255, 137, 0, 0.15);
+      color: var(--color-lime);
+      border: 1px solid rgba(255, 137, 0, 0.3);
       margin-left: 0.5rem;
       vertical-align: middle;
     }
@@ -257,7 +271,7 @@
     }
 
     .section-title {
-      font-family: 'Montserrat', sans-serif;
+      font-family: inherit;
       font-size: 1.25rem;
       font-weight: 700;
       color: var(--totvs-gray-light);
@@ -284,8 +298,8 @@
 <body>
   <header class="header">
     <a href="/dashboard" class="logo">
-      <img src="/static/logo-totvs-branco.png" alt="TOTVS" class="logo-img">
-      <span class="logo-text"><span> | Nordeste</span></span>
+      <img src="/assets/img/TOTVS%20Nordeste%20-%20Logo%20-%20Branco.png" alt="TOTVS Nordeste" class="logo-img" onerror="this.onerror=null;this.src='/static/logo-totvs-branco.png';">
+      <span class="logo-text"></span>
     </a>
     <div class="header-actions">
       <div class="user-info">
@@ -408,3 +422,7 @@
   </main>
 </body>
 </html>
+
+
+
+

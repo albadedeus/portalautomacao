@@ -9,14 +9,32 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
+    @font-face {
+      font-family: 'TOTVS-Bold';
+      src: url('/assets/fonts/TOTVS-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
     :root {
+      --font-sans: 'TOTVS-Bold', sans-serif;
       --azulescuro: #002233;
-      --azul: #00dbff;
-      --roxo: #a44dff;
-      --verde: #00ffd4;
-      --limao: #d9ff65;
-      --laranja: #ff8900;
-      --rosa: #ff009e;
+      --azul: #00DBFF;
+      --roxo: #A44DFF;
+      --verde: #00FFD4;
+      --limao: #D9FF65;
+      --laranja: #FF8900;
+      --rosa: #FF009E;
+      --color-blue-dark: var(--azulescuro);
+      --color-blue-light: var(--azul);
+      --color-purple: var(--roxo);
+      --color-green: var(--verde);
+      --color-lime: var(--limao);
+      --color-orange: var(--laranja);
+      --color-pink: var(--rosa);
+      --totvs-white: #ffffff;
+      --totvs-black: #000000;
     }
 
     * {
@@ -26,8 +44,8 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, var(--azulescuro) 0%, #003d5c 100%);
+      font-family: var(--font-sans);
+      background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue-dark) 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -40,13 +58,13 @@
       border-radius: 16px;
       box-shadow: 0 20px 60px rgba(0, 219, 255, 0.2);
       padding: 0;
-      max-width: 900px;
+      max-width: 1500px;
       width: 100%;
       overflow: hidden;
     }
 
     .header {
-      background: linear-gradient(135deg, var(--azulescuro) 0%, #004466 100%);
+      background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue-dark) 100%);
       padding: 0;
       text-align: center;
       border-bottom: 4px solid var(--verde);
@@ -70,7 +88,7 @@
     }
 
     .header-brand img {
-      height: 24px;
+      height: 36px;
     }
 
     .header-brand span {
@@ -137,7 +155,7 @@
     /* Tabs */
     .tabs {
       display: flex;
-      border-bottom: 2px solid #e0e0e0;
+      border-bottom: 2px solid rgba(0,0,0,0.08);
       margin-bottom: 25px;
     }
 
@@ -145,7 +163,7 @@
       padding: 12px 24px;
       cursor: pointer;
       font-weight: 600;
-      color: #666;
+      color: var(--color-blue-light);
       border-bottom: 3px solid transparent;
       margin-bottom: -2px;
       transition: all 0.3s;
@@ -172,17 +190,17 @@
     }
 
     .upload-area {
-      border: 2px solid #e0e0e0;
+      border: 2px solid rgba(0,0,0,0.08);
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 20px;
       transition: all 0.3s;
-      background: #f8f9fa;
+      background: var(--totvs-white);
     }
 
     .upload-area:hover {
       border-color: var(--verde);
-      background: #f0fff8;
+      background: var(--totvs-white);
       box-shadow: 0 4px 12px rgba(0, 255, 212, 0.1);
     }
 
@@ -201,7 +219,7 @@
     }
 
     small {
-      color: #666;
+      color: var(--color-blue-light);
       font-size: 13px;
       display: block;
       margin-bottom: 12px;
@@ -211,7 +229,7 @@
       display: block;
       margin: 0 auto;
       padding: 12px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--color-blue-light);
       border-radius: 8px;
       width: 100%;
       background: #fff;
@@ -224,7 +242,7 @@
     }
 
     button {
-      background: linear-gradient(135deg, var(--verde) 0%, #00b89f 100%);
+      background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green) 100%);
       color: var(--azulescuro);
       border: none;
       padding: 16px 40px;
@@ -268,8 +286,8 @@
     }
 
     .config-list {
-      background: #f8f9fa;
-      border: 1px solid #e0e0e0;
+      background: var(--totvs-white);
+      border: 1px solid rgba(0,0,0,0.08);
       border-radius: 10px;
       padding: 15px;
       max-height: 200px;
@@ -281,10 +299,10 @@
       align-items: center;
       justify-content: space-between;
       padding: 8px 12px;
-      background: #fff;
+      background: var(--totvs-white);
       border-radius: 6px;
       margin-bottom: 6px;
-      border: 1px solid #e0e0e0;
+      border: 1px solid rgba(0,0,0,0.08);
     }
 
     .config-item:last-child {
@@ -292,7 +310,7 @@
     }
 
     .config-item span {
-      font-family: 'Consolas', monospace;
+      font-family: inherit;
       font-size: 13px;
       color: var(--azulescuro);
     }
@@ -309,7 +327,7 @@
     }
 
     .btn-remove:hover {
-      background: #d4007f;
+      background: var(--color-pink);
       transform: scale(1.05);
     }
 
@@ -322,7 +340,7 @@
     .add-form input {
       flex: 1;
       padding: 10px 15px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--color-blue-light);
       border-radius: 6px;
       font-size: 14px;
     }
@@ -367,12 +385,12 @@
     }
 
     .resultado.sucesso .resultado-header {
-      background: linear-gradient(135deg, var(--verde) 0%, #00d4b8 100%);
+      background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green) 100%);
       color: var(--azulescuro);
     }
 
     .resultado.erro .resultado-header {
-      background: linear-gradient(135deg, var(--rosa) 0%, #ff4081 100%);
+      background: linear-gradient(135deg, var(--color-pink) 0%, var(--color-pink) 100%);
       color: #fff;
     }
 
@@ -392,11 +410,11 @@
     }
 
     .card {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      background: linear-gradient(135deg, var(--totvs-white) 0%, var(--totvs-white) 100%);
       padding: 20px;
       border-radius: 10px;
       text-align: center;
-      border: 1px solid #dee2e6;
+      border: 1px solid rgba(0,0,0,0.08);
       transition: all 0.3s;
     }
 
@@ -425,7 +443,7 @@
     }
 
     .label {
-      color: #666;
+      color: rgba(0,0,0,0.6);
       font-size: 12px;
       font-weight: 500;
       text-transform: uppercase;
@@ -433,7 +451,7 @@
     }
 
     .download-btn {
-      background: linear-gradient(135deg, var(--verde) 0%, #00b89f 100%);
+      background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green) 100%);
       margin-top: 20px;
       text-decoration: none;
       display: block;
@@ -451,7 +469,7 @@
     }
 
     .spinner {
-      border: 4px solid #f3f3f3;
+      border: 4px solid rgba(0,0,0,0.04);
       border-top: 4px solid var(--verde);
       border-radius: 50%;
       width: 50px;
@@ -473,9 +491,9 @@
     .footer {
       text-align: center;
       padding: 16px 20px;
-      color: #666;
+      color: rgba(0,0,0,0.6);
       font-size: 12px;
-      background: linear-gradient(135deg, var(--azulescuro) 0%, #003d5c 100%);
+      background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue-dark) 100%);
       color: rgba(255, 255, 255, 0.6);
     }
 
@@ -485,7 +503,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: linear-gradient(135deg, var(--verde) 0%, #00d4b8 100%);
+      background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green) 100%);
       color: var(--azulescuro);
       padding: 30px 50px;
       border-radius: 15px;
@@ -526,9 +544,56 @@
       display: block;
     }
 
+    /* Tema escuro padrao do portal */
+    .container {
+      background: linear-gradient(180deg, rgba(0,34,51,0.97), rgba(0,34,51,0.93));
+      border: 1px solid rgba(0, 219, 255, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+    .content,
+    .resultado-body,
+    .config-section {
+      background: rgba(0, 34, 51, 0.88);
+    }
+    .upload-area,
+    .card,
+    .config-item {
+      background: rgba(0, 34, 51, 0.78);
+      border-color: rgba(0, 219, 255, 0.22);
+    }
+    .upload-area label,
+    .section-title,
+    .value,
+    .config-section h3,
+    .config-item span,
+    .loading-text {
+      color: var(--totvs-white);
+    }
+    small,
+    .label,
+    .tab {
+      color: rgba(255, 255, 255, 0.78);
+    }
+    .tab:hover {
+      color: var(--color-blue-light);
+    }
+    input[type="file"],
+    .config-item input {
+      background: rgba(0, 34, 51, 0.9);
+      color: var(--totvs-white);
+      border-color: rgba(0, 219, 255, 0.5);
+    }
+    .tabs,
+    .section-title {
+      border-bottom-color: rgba(0, 219, 255, 0.2);
+    }
+    .footer {
+      border-top: 1px solid rgba(0, 219, 255, 0.2);
+    }
+
     .empty-list {
       text-align: center;
-      color: #999;
+      color: var(--color-blue-light);
       padding: 20px;
       font-style: italic;
     }
@@ -544,8 +609,7 @@
     <div class="header">
       <div class="header-top">
         <a href="/dashboard" class="header-brand">
-          <img src="/static/logo-totvs-branco.png" alt="TOTVS" onerror="this.style.display='none'" />
-          <span>| Nordeste</span>
+          <img src="/assets/img/TOTVS%20Nordeste%20-%20Logo%20-%20Branco.png" alt="TOTVS Nordeste" onerror="this.style.display='none'" />
         </a>
         <a href="/dashboard" class="header-back">
           <i class="fas fa-arrow-left"></i>
@@ -601,7 +665,7 @@
       <div class="tab-content" id="tab-produtos">
         <div class="config-section">
           <h3><i class="fas fa-box"></i> Produtos sem Royalties</h3>
-          <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+          <p style="color: var(--color-blue-light); font-size: 13px; margin-bottom: 15px;">
             Produtos nesta lista receberão "NÃO" automaticamente na coluna Royalties
           </p>
           <div class="config-list" id="listaProdutos">
@@ -620,7 +684,7 @@
       <div class="tab-content" id="tab-clientes">
         <div class="config-section">
           <h3><i class="fas fa-users"></i> Clientes sem Royalties</h3>
-          <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+          <p style="color: var(--color-blue-light); font-size: 13px; margin-bottom: 15px;">
             Clientes nesta lista receberão "NÃO" automaticamente na coluna Royalties
           </p>
           <div class="config-list" id="listaClientes">
@@ -902,7 +966,7 @@
             ❌ Erro no Processamento
           </div>
           <div class="resultado-body">
-            <p style="color: #666; text-align: center;">${err.message}</p>
+            <p style="color: var(--color-blue-light); text-align: center;">${err.message}</p>
           </div>
         `;
       } finally {
@@ -921,3 +985,10 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+

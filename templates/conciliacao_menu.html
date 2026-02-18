@@ -5,24 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Conciliação Bancária | Portal de Automações</title>
   <link rel="icon" type="image/png" href="/static/logo-hexa.png">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
+    @font-face {
+      font-family: 'TOTVS-Bold';
+      src: url('/assets/fonts/TOTVS-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
     :root {
-      --totvs-dark: #0d1117;
-      --totvs-navy: #161b22;
-      --totvs-blue: #00d4e5;
-      --totvs-cyan: #00bcd4;
-      --totvs-cyan-dark: #0097a7;
+      --totvs-font: 'TOTVS-Bold', sans-serif;
+      --color-blue-light: #00DBFF;
+      --color-blue-dark: #002233;
+      --color-purple: #A44DFF;
+      --color-green: #00FFD4;
+      --color-lime: #D9FF65;
+      --color-orange: #FF8900;
+      --color-pink: #FF009E;
       --totvs-white: #ffffff;
-      --totvs-gray: #8b949e;
-      --totvs-gray-light: #c9d1d9;
-      --color-success: #2ea043;
-      --color-danger: #f85149;
-      --color-warning: #d29922;
-      --color-financeiro: #ff8900;
-      --color-cliente: #14b8a6;
+      --totvs-black: #000000;
+      /* legacy mappings */
+      --totvs-dark: var(--color-blue-dark);
+      --totvs-navy: var(--color-blue-dark);
+      --totvs-blue: var(--color-blue-light);
+      --totvs-gray: rgba(255,255,255,0.78);
+      --totvs-gray-light: rgba(255,255,255,0.92);
+      --color-cliente: var(--color-green);
+      --color-success: var(--color-green);
+      --color-danger: var(--color-pink);
+      --color-warning: var(--color-orange);
+      --color-financeiro: var(--color-orange);
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
       --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.15);
@@ -31,7 +46,7 @@
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Open Sans', sans-serif;
+      font-family: var(--totvs-font);
       background: var(--totvs-dark);
       min-height: 100vh;
       color: var(--totvs-white);
@@ -39,7 +54,7 @@
 
     /* Header */
     .header {
-      background: rgba(13, 17, 23, 0.95);
+      background: rgba(0, 34, 51, 0.95);
       backdrop-filter: blur(10px);
       padding: 0 3rem;
       display: flex;
@@ -52,8 +67,8 @@
       box-shadow: 0 2px 20px rgba(0,0,0,0.3);
     }
     .logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; }
-    .logo-img { height: 28px; width: auto; }
-    .logo-text { color: var(--totvs-white); font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.5rem; }
+    .logo-img { height: 40px; width: auto; }
+    .logo-text { color: var(--totvs-white); font-family: var(--totvs-font); font-weight: 800; font-size: 1.5rem; }
     .logo-text span { color: var(--totvs-blue); }
 
     .header-actions {
@@ -68,7 +83,7 @@
       border: 1px solid var(--totvs-gray);
       border-radius: 8px;
       color: var(--totvs-gray-light);
-      font-family: 'Montserrat', sans-serif;
+      font-family: inherit;
       font-weight: 600;
       font-size: 0.85rem;
       cursor: pointer;
@@ -88,7 +103,7 @@
     /* Main Content */
     .main-content {
       padding: 120px 3rem 3rem;
-      max-width: 1400px;
+      max-width: 1650px;
       margin: 0 auto;
     }
 
@@ -97,7 +112,7 @@
     }
 
     .page-header h1 {
-      font-family: 'Montserrat', sans-serif;
+      font-family: inherit;
       font-size: 2rem;
       font-weight: 800;
       margin-bottom: 0.5rem;
@@ -119,16 +134,16 @@
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.5rem;
+      gap: 1.25rem;
       margin-top: 2rem;
     }
 
     .module-card {
-      background: var(--totvs-navy);
-      border-radius: 16px;
-      padding: 2rem;
+      background: linear-gradient(180deg, rgba(0,34,51,0.95), rgba(0,34,51,0.9));
+      border-radius: 18px;
+      padding: 1.8rem;
       box-shadow: var(--shadow-lg);
-      border: 2px solid transparent;
+      border: 1px solid rgba(0, 219, 255, 0.16);
       transition: var(--transition);
       position: relative;
       display: flex;
@@ -145,11 +160,11 @@
     }
 
     .module-card.available.orange:hover {
-      border-color: var(--color-financeiro);
+      border-color: rgba(255, 137, 0, 0.9);
     }
 
     .module-card.available.teal:hover {
-      border-color: var(--color-cliente);
+      border-color: rgba(0, 255, 212, 0.9);
     }
 
     .module-card.coming-soon {
@@ -174,13 +189,13 @@
     }
 
     .card-badge.available {
-      background: rgba(46, 160, 67, 0.2);
+      background: rgba(0, 255, 212, 0.2);
       color: var(--color-success);
       border: 1px solid var(--color-success);
     }
 
     .card-badge.coming-soon {
-      background: rgba(139, 148, 158, 0.2);
+      background: rgba(164, 77, 255, 0.2);
       color: var(--totvs-gray);
       border: 1px solid var(--totvs-gray);
     }
@@ -202,24 +217,24 @@
     }
 
     .card-icon.orange {
-      background: linear-gradient(135deg, var(--color-financeiro), #cc6d00);
+      background: linear-gradient(135deg, var(--color-financeiro), var(--color-orange));
     }
 
     .card-icon.gray {
-      background: linear-gradient(135deg, #6b7280, #4b5563);
+      background: linear-gradient(135deg, var(--color-blue-dark), var(--color-blue-dark));
     }
 
     .card-icon.teal {
-      background: linear-gradient(135deg, var(--color-cliente), #0d9488);
+      background: linear-gradient(135deg, var(--color-green), var(--color-green));
     }
 
     .card-icon.purple {
-      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      background: linear-gradient(135deg, var(--color-purple), var(--color-purple));
     }
 
     /* Card Content */
     .module-card h2 {
-      font-family: 'Montserrat', sans-serif;
+      font-family: inherit;
       font-size: 1.2rem;
       font-weight: 700;
       color: var(--totvs-white);
@@ -227,7 +242,7 @@
     }
 
     .module-card p {
-      color: var(--totvs-gray);
+      color: var(--totvs-gray-light);
       font-size: 0.9rem;
       line-height: 1.6;
       flex-grow: 1;
@@ -244,7 +259,7 @@
     }
 
     .card-action.available.orange {
-      color: var(--color-financeiro);
+      color: var(--color-orange);
     }
 
     .card-action.available.teal {
@@ -285,8 +300,8 @@
 <body>
   <header class="header">
     <a href="/dashboard" class="logo">
-      <img src="/static/logo-totvs-branco.png" alt="TOTVS" class="logo-img">
-      <span class="logo-text"><span> | Nordeste</span></span>
+      <img src="/assets/img/TOTVS%20Nordeste%20-%20Logo%20-%20Branco.png" alt="TOTVS Nordeste" class="logo-img" onerror="this.onerror=null;this.src='/static/logo-totvs-branco.png';">
+      <span class="logo-text"></span>
     </a>
     <div class="header-actions">
       <a href="/dashboard" class="btn-back">
@@ -344,3 +359,7 @@
   </main>
 </body>
 </html>
+
+
+
+
