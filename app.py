@@ -273,11 +273,8 @@ def processar_arquivo_rv_dsr(arquivo_path):
             ignorados_filial += 1
             continue
 
-        filial = str(filial).strip()
-        matricula = str(matricula).strip()
-        # Não preenche com 0 se tiver 5+ dígitos
-        if len(matricula) < 5:
-            matricula = matricula.zfill(5)
+        filial = str(filial).strip().zfill(6)         # filial sempre 6
+        matricula = str(matricula).strip().zfill(6)   # matrícula sempre 6 (padrão layout 2)
 
         rv_valor = pegar_valor(rv_raw)
         dsr_valor = pegar_valor(dsr_raw)
@@ -308,9 +305,8 @@ def processar_arquivo_rv_dsr(arquivo_path):
 
         rv_fmt = formatar(rv_valor)
         dsr_fmt = formatar(dsr_valor)
-        identificador = filial + matricula
-        # Espaço de 7 se matrícula tem 5 dígitos, 6 se tem 6+
-        espacos = 7 if len(matricula) == 5 else 6
+        identificador = filial + matricula            # identificador sempre 12 chars
+        espacos = 6                                   # espaçamento fixo (padrão layout 2)
 
         linha_rv = f"{identificador}{' ' * espacos}{cod_rv}{rv_fmt}"
         linha_dsr = f"{identificador}{' ' * espacos}{cod_dsr}{dsr_fmt}"
