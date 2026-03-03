@@ -1763,10 +1763,11 @@ def processar_nfs_pdf(pdf_path):
     # ── Tributação federal ────────────────────────────────────────────────
     m_fed = re.search(r'TRIBUTA.{0,6}O\s*FEDERAL(.*?)(?:VALOR\s*TOTAL|TOTAIS\s*APROXIMADOS|$)', t, re.DOTALL | re.IGNORECASE)
     tf = m_fed.group(1) if m_fed else ''
-    irrf_c = int(_extrair_tributo_segmentado(tf, r'\bIRRF\b', [r'\bPIS\b', r'\bC[O0]FINS\b', r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b']) or 0)
-    pis_c = int(_extrair_tributo_segmentado(tf, r'\bPIS\b', [r'\bC[O0]FINS\b', r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b']) or 0)
-    cofins_c = int(_extrair_tributo_segmentado(tf, r'\bC[O0]FINS\b', [r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b', r'\bPIS\b']) or 0)
-    contrib_c = int(_extrair_tributo_segmentado(tf, r'Contribui[cç][oõ]es\s*Sociais|\bCSLL\b', [r'\bIRRF\b', r'\bPIS\b', r'\bC[O0]FINS\b']) or 0)
+    # Extração robusta por rótulo (mesma linha ou próximas), evitando campos em branco.
+    irrf_c = int(_extrair_valor_por_rotulo(tf, r'\bIRRF\b') or 0)
+    pis_c = int(_extrair_valor_por_rotulo(tf, r'\bPIS\b') or 0)
+    cofins_c = int(_extrair_valor_por_rotulo(tf, r'\bC[O0]FINS\b') or 0)
+    contrib_c = int(_extrair_valor_por_rotulo(tf, r'Contribui[cç][oõ]es\s*Sociais|\bCSLL\b') or 0)
 
     # ── Valor total ───────────────────────────────────────────────────────
     m_vt = re.search(r'VALOR TOTAL DA NFS-E(.*?)TOTAIS APROXIMADOS', t, re.DOTALL)
@@ -1808,10 +1809,10 @@ def processar_nfs_pdf(pdf_path):
         'AE': None, 'AF': None,
         'AG': _cents(valor_nota),
         'AH': None, 'AI': None, 'AJ': None, 'AK': None,
-        'AL': irrf_c if irrf_c > 0 else None,
-        'AM': pis_c if pis_c > 0 else None,
-        'AN': cofins_c if cofins_c > 0 else None,
-        'AO': contrib_c if contrib_c > 0 else None,
+        'AL': irrf_c,
+        'AM': pis_c,
+        'AN': cofins_c,
+        'AO': contrib_c,
         'AP': None, 'AQ': None,
         'AR': 0,
         'AS': None,
