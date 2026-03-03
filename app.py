@@ -1433,6 +1433,30 @@ def _extrair_valor_por_rotulo(texto, rotulo_regex):
     return '0'
 
 
+def _extrair_tributo_por_linha(texto, rotulos):
+    """Extrai valor de tributo buscando rótulo + valor monetário na mesma linha/janela curta."""
+    if not texto:
+        return '0'
+
+    if isinstance(rotulos, str):
+        rotulos = [rotulos]
+    rx_label = re.compile('|'.join(rotulos), re.IGNORECASE)
+    rx_valor = re.compile(r'R?\$?\s*([\d.]+,\d{2}|[\d]+\.\d{2})')
+
+    linhas = [re.sub(r'\s+', ' ', ln).strip() for ln in texto.splitlines() if ln.strip()]
+    for i, ln in enumerate(linhas):
+        if not rx_label.search(ln):
+            continue
+        if rx_valor.search(ln):
+            return str(_valor_centavos(rx_valor.search(ln).group(1)))
+        if i + 1 < len(linhas):
+            janela = f"{ln} {linhas[i+1]}"
+            m = rx_valor.search(janela)
+            if m:
+                return str(_valor_centavos(m.group(1)))
+    return '0'
+
+
 def _chars_para_texto(chars):
     """Converte lista de caracteres posicionados em texto, inserindo espaços pelo gap."""
     if not chars:
@@ -1598,7 +1622,7 @@ def processar_nfs_pdf(pdf_path):
                     if not d['bairro']:
                         d['bairro'] = partes_end[3]
                 elif n <= 2:
-                    for prox in linhas_emit[i + 1:i + 3]:
+                    for prox in linhas_emit[i + 1:i + 7]:
                         prox = re.sub(r'\s+coluna\s+\w+', '', prox, flags=re.IGNORECASE).strip(' ,')
                         if not prox:
                             continue
@@ -1684,10 +1708,10 @@ def processar_nfs_pdf(pdf_path):
     m_fed = re.search(r'TRIBUTA[\u00c7C][\u00c3A]O\s*FEDERAL([\s\S]*?)(?:VALOR\s*TOTAL\s*DA\s*NFS|TOTAIS\s*APROXIMADOS|$)', texto, re.IGNORECASE)
     secao_fed = m_fed.group(1) if m_fed else texto
 
-    d['irrf_centavos'] = _extrair_valor_por_rotulo(secao_fed, r'\bIRRF\b')
-    d['pis_centavos'] = _extrair_valor_por_rotulo(secao_fed, r'\bPIS\b')
-    d['cofins_centavos'] = _extrair_valor_por_rotulo(secao_fed, r'\bCOFINS\b')
-    d['csll_centavos'] = _extrair_valor_por_rotulo(secao_fed, 'Contribui(?:\\u00e7\\u00f5es|coes)\\s*Sociais|CSLL')
+    d['irrf_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bIRRF\b'])
+    d['pis_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bPIS\b'])
+    d['cofins_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bCOFINS\b'])
+    d['csll_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b'])
 
     m = re.search(r'Reten[c\u00e7][a\u00e3]o\s*do\s*ISSQN\s+(N[a\u00e3]o\s*Retido|Retido)', texto, re.IGNORECASE)
     d['issqn_retido'] = '0' if (m and re.search(r'N[a\u00e3]o', m.group(1), re.I)) or not m else '1'
