@@ -1482,8 +1482,10 @@ def _extrair_numero_nota(texto):
     # Tentativa mais forte: trecho entre "Número da NFS-e" e "Série da DPS"
     m_bloco = re.search(r'N[uú]mero\s*da\s*NFS-e([\s\S]{0,180}?)S[eé]rie\s*da\s*DPS', texto, re.IGNORECASE)
     if m_bloco:
-        for n in _candidatos(m_bloco.group(1)):
-            cand.append((n, texto.find(m_bloco.group(0))))
+        bloco_cands = _candidatos(m_bloco.group(1))
+        if bloco_cands:
+            # Regra principal: primeiro candidato no bloco específico do cabeçalho.
+            return bloco_cands[0]
 
     # Tentativas diretas próximas ao rótulo
     for m in re.finditer(r'N[uú]mero\s*da\s*NFS-e', texto, re.IGNORECASE):
@@ -1507,9 +1509,9 @@ def _extrair_numero_nota(texto):
     if not cand:
         return ''
 
-    # Prioriza maior tamanho; empate: ocorrência mais próxima do fim (normalmente campo final do cabeçalho)
-    cand.sort(key=lambda x: (len(x[0]), x[1]))
-    return cand[-1][0]
+    # Fallback: prioriza maior tamanho e ocorrência mais cedo (mais perto do cabeçalho).
+    cand.sort(key=lambda x: (-len(x[0]), x[1]))
+    return cand[0][0]
 
 
 def _parse_endereco_por_virgula(endereco):
@@ -1535,6 +1537,27 @@ def _parse_endereco_por_virgula(endereco):
         bairro = partes[2]
 
     return rua, numero, complemento, bairro
+
+
+def _extrair_tributo_segmentado(texto, rotulo, proximos_rotulos):
+    """Extrai tributo no trecho entre o rótulo atual e o próximo rótulo conhecido."""
+    if not texto:
+        return '0'
+    pad_inicio = re.compile(rotulo, re.IGNORECASE)
+    pad_fim = re.compile('|'.join(proximos_rotulos), re.IGNORECASE) if proximos_rotulos else None
+    pad_valor = re.compile(r'R?\$?\s*([\d.]+,\d{2}|[\d]+\.\d{2})')
+
+    t = re.sub(r'\s+', ' ', texto)
+    m_ini = pad_inicio.search(t)
+    if not m_ini:
+        return '0'
+    trecho = t[m_ini.end():]
+    if pad_fim:
+        m_fim = pad_fim.search(trecho)
+        if m_fim:
+            trecho = trecho[:m_fim.start()]
+    m_val = pad_valor.search(trecho)
+    return str(_valor_centavos(m_val.group(1))) if m_val else '0'
 
 
 def _chars_para_texto(chars):
@@ -1719,7 +1742,7 @@ def processar_nfs_pdf(pdf_path):
         if m:
             d['bairro'] = m.group(1).strip(' ,-')
     if not d['bairro']:
-        m = re.search(r'\b(CENTRO)\b', secao_emitente, re.IGNORECASE)
+        m = re.search(r'\b(CENTRO)\b', secao_emitente, re.IGNORECASE) or re.search(r'\b(CENTRO)\b', texto, re.IGNORECASE)
         if m:
             d['bairro'] = m.group(1).upper()
     if d.get('bairro'):
@@ -1753,7 +1776,7 @@ def processar_nfs_pdf(pdf_path):
         except Exception:
             d['aliquota_centesimos'] = ''
     else:
-        d['aliquota_centesimos'] = ''
+        d['aliquota_centesimos'] = '200'
 
     m = re.search(r'Descri[c\u00e7][a\u00e3]o\s*do\s*Servi[c\u00e7]o\s*(?:coluna\s*\w+\s*)?([\s\S]*?)(?=TRIBUTA[\u00c7C])', texto, re.IGNORECASE)
     if m:
@@ -1793,10 +1816,10 @@ def processar_nfs_pdf(pdf_path):
     m_fed = re.search(r'TRIBUTA[\u00c7C][\u00c3A]O\s*FEDERAL([\s\S]*?)(?:VALOR\s*TOTAL\s*DA\s*NFS|TOTAIS\s*APROXIMADOS|$)', texto, re.IGNORECASE)
     secao_fed = m_fed.group(1) if m_fed else texto
 
-    d['irrf_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bIRRF\b'])
-    d['pis_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bPIS\b'])
-    d['cofins_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bC[O0]FINS\b'])
-    d['csll_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b'])
+    d['irrf_centavos'] = _extrair_tributo_segmentado(secao_fed, r'\bIRRF\b', [r'\bPIS\b', r'\bC[O0]FINS\b', r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b'])
+    d['pis_centavos'] = _extrair_tributo_segmentado(secao_fed, r'\bPIS\b', [r'\bC[O0]FINS\b', r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b'])
+    d['cofins_centavos'] = _extrair_tributo_segmentado(secao_fed, r'\bC[O0]FINS\b', [r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b', r'\bPIS\b'])
+    d['csll_centavos'] = _extrair_tributo_segmentado(secao_fed, r'Contribui[cç][oõ]es\s*Sociais|\bCSLL\b', [r'\bIRRF\b', r'\bPIS\b', r'\bC[O0]FINS\b'])
 
     # Não aplica fallback cego por ordem para evitar repetir valores incorretos.
 
