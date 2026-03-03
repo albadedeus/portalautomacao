@@ -1667,11 +1667,18 @@ def processar_nfs_pdf(pdf_path):
         return None, str(texto_raw).upper().strip()
 
     # ── Cabeçalho ───────────────────────────────────────────────────────
-    num_nota     = _sd(_campo('Número da NFS-e'))
-    if not num_nota:
+    # Número da NFS-e: tenta rótulos com e sem espaço e depois fallback global.
+    num_nota = _sd(_campo('Número da NFS-e') or _campo('NúmerodaNFS-e') or _campo('Numero da NFS-e') or _campo('NumerodaNFS-e'))
+    if not num_nota or len(num_nota) < 6:
         m_num = re.search(r'N[uú]mero\s*da\s*NFS-e\s*([0-9 .-]{5,})', t, re.IGNORECASE)
         if m_num:
-            num_nota = _sd(m_num.group(1))
+            candidato = _sd(m_num.group(1))
+            if len(candidato) > len(num_nota):
+                num_nota = candidato
+    if not num_nota or len(num_nota) < 6:
+        candidato = _extrair_numero_nota(t)
+        if candidato and len(candidato) > len(num_nota):
+            num_nota = candidato
     data_emissao = _campo('Data e Hora da emissão da NFS-e')
     if data_emissao:
         data_emissao = data_emissao.split()[0]   # só a data, sem hora
