@@ -1396,30 +1396,50 @@ def _ibge_municipio(nome_municipio):
     return _IBGE_MAP.get(chave) or _IBGE_MAP.get(chave_ascii) or ('', '')
 
 
+def _chars_para_texto(chars):
+    """Converte lista de caracteres posicionados em texto, inserindo espaços pelo gap."""
+    if not chars:
+        return ''
+    chars_ord = sorted(chars, key=lambda c: c['x0'])
+    texto = chars_ord[0]['text']
+    for i in range(1, len(chars_ord)):
+        prev = chars_ord[i - 1]
+        curr = chars_ord[i]
+        x1_prev = prev.get('x1', prev['x0'] + abs(prev.get('width', 5)))
+        gap = curr['x0'] - x1_prev
+        ref_w = (abs(prev.get('width', 5)) + abs(curr.get('width', 5))) / 2
+        if ref_w <= 0:
+            ref_w = 5
+        if gap > ref_w * 0.3:
+            texto += ' '
+        texto += curr['text']
+    return texto
+
+
 def _extrair_texto_nfs(pdf_path):
-    """Extrai texto de NFS-e preservando espaços entre palavras via extract_words()."""
+    """Extrai texto de NFS-e preservando espaços via posicionamento de caracteres."""
     paginas = []
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
-            words = page.extract_words(x_tolerance=3, y_tolerance=3, keep_blank_chars=False)
-            if not words:
+            chars = [c for c in page.chars if c.get('text', '').strip()]
+            if not chars:
                 paginas.append('')
                 continue
             linhas = []
             linha_atual = []
             y_atual = None
-            for word in sorted(words, key=lambda w: (round(w['top']), w['x0'])):
-                y = round(word['top'])
-                if y_atual is None or abs(y - y_atual) > 5:
+            for char in sorted(chars, key=lambda c: (c['top'], c['x0'])):
+                y = char['top']
+                if y_atual is None or abs(y - y_atual) > 3:
                     if linha_atual:
-                        linhas.append(' '.join(w['text'] for w in linha_atual))
-                    linha_atual = [word]
+                        linhas.append(_chars_para_texto(linha_atual))
+                    linha_atual = [char]
                     y_atual = y
                 else:
-                    linha_atual.append(word)
+                    linha_atual.append(char)
             if linha_atual:
-                linhas.append(' '.join(w['text'] for w in linha_atual))
-            paginas.append('\n'.join(linhas))
+                linhas.append(_chars_para_texto(linha_atual))
+            paginas.append('\n'.join(l for l in linhas if l.strip()))
     return '\n'.join(paginas)
 
 
@@ -1430,9 +1450,9 @@ def processar_nfs_pdf(pdf_path):
     d = {}
 
     # --- Número da NFS-e ---
-    m = re.search(r'N[uú]mero\s*da\s*NFS-e\D+?(\d{3,8})', texto, re.IGNORECASE)
+    m = re.search(r'N[uú]mero\s*da\s*NFS-e[\s\S]{0,80}?(\d{4,9})\b', texto, re.IGNORECASE)
     if not m:
-        m = re.search(r'NFS-e\s*[Nn][°º]?\s*(\d{3,8})', texto)
+        m = re.search(r'NFS-e\s*[Nn][°º]?\s*(\d{4,9})', texto)
     d['numero_nota'] = m.group(1) if m else ''
 
     # --- Série da DPS ---
@@ -1536,9 +1556,9 @@ def processar_nfs_pdf(pdf_path):
     d['cod_tributacao'] = '620400001'
 
     # --- Alíquota (em centésimos: 2% → 200, 5% → 500) ---
-    m = re.search(r'Al[ií]quota\s*Aplicada\D{0,20}?([\d,\.]+)\s*%', texto, re.IGNORECASE)
+    m = re.search(r'Al[ií]quota\s*Aplicada[\s\S]{0,40}?([\d,\.]+)\s*%', texto, re.IGNORECASE)
     if not m:
-        m = re.search(r'Al[ií]quota\D{0,20}?([\d,\.]+)\s*%', texto, re.IGNORECASE)
+        m = re.search(r'Al[ií]quota[\s\S]{0,40}?([\d,\.]+)\s*%', texto, re.IGNORECASE)
     if m:
         try:
             d['aliquota_centesimos'] = str(int(round(float(m.group(1).replace(',', '.')) * 100)))
@@ -1580,26 +1600,26 @@ def processar_nfs_pdf(pdf_path):
     m_fed = re.search(r'TRIBUTA[ÇC][ÃA]O\s*FEDERAL([\s\S]*?)(?:VALOR\s*TOTAL\s*DA\s*NFS|TOTAIS\s*APROXIMADOS|$)', texto, re.IGNORECASE)
     secao_fed = m_fed.group(1) if m_fed else texto
 
-    # IRRF
-    m = re.search(r'IRRF\D{0,15}([\d.,]+)', secao_fed)
+    # IRRF — aceita R$ antes do valor e espaços variados
+    m = re.search(r'IRRF[\s\S]{0,30}?R?\$?\s*([\d.,]+)', secao_fed, re.IGNORECASE)
     d['irrf_centavos'] = str(_valor_centavos(m.group(1))) if m else '0'
 
-    # PIS
-    m_pis = re.search(r'PIS[-\s]*D[eé]bito\s*Apura[cç][aã]o\s*Pr[oó]pria\D{0,40}?([\d.,]+)', secao_fed, re.IGNORECASE)
+    # PIS — tenta padrão completo, depois fallback simples
+    m_pis = re.search(r'PIS[-\s]*D[eé]bito\s*Apura[cç][aã]o\s*Pr[oó]pria[\s\S]{0,60}?R?\$?\s*([\d.,]+)', secao_fed, re.IGNORECASE)
     if not m_pis:
-        m_pis = re.search(r'\bPIS\b\D{0,20}([\d.,]+)', secao_fed, re.IGNORECASE)
+        m_pis = re.search(r'\bPIS\b[\s\S]{0,30}?R?\$?\s*([\d.,]+)', secao_fed, re.IGNORECASE)
     d['pis_centavos'] = str(_valor_centavos(m_pis.group(1))) if m_pis else '0'
 
     # COFINS
-    m_cof = re.search(r'COFINS[-\s]*D[eé]bito\s*Apura[cç][aã]o\s*Pr[oó]pria\D{0,40}?([\d.,]+)', secao_fed, re.IGNORECASE)
+    m_cof = re.search(r'COFINS[-\s]*D[eé]bito\s*Apura[cç][aã]o\s*Pr[oó]pria[\s\S]{0,60}?R?\$?\s*([\d.,]+)', secao_fed, re.IGNORECASE)
     if not m_cof:
-        m_cof = re.search(r'\bCOFINS\b\D{0,20}([\d.,]+)', secao_fed, re.IGNORECASE)
+        m_cof = re.search(r'\bCOFINS\b[\s\S]{0,30}?R?\$?\s*([\d.,]+)', secao_fed, re.IGNORECASE)
     d['cofins_centavos'] = str(_valor_centavos(m_cof.group(1))) if m_cof else '0'
 
     # CSLL
-    m = re.search(r'Contribui[cç][oõ]es\s*Sociais[-\s]*Retidas\D{0,40}?([\d.,]+)', secao_fed, re.IGNORECASE)
+    m = re.search(r'Contribui[cç][oõ]es\s*Sociais[-\s]*Retidas[\s\S]{0,60}?R?\$?\s*([\d.,]+)', secao_fed, re.IGNORECASE)
     if not m:
-        m = re.search(r'\bCSLL\b\D{0,20}([\d.,]+)', secao_fed, re.IGNORECASE)
+        m = re.search(r'\bCSLL\b[\s\S]{0,30}?R?\$?\s*([\d.,]+)', secao_fed, re.IGNORECASE)
     d['csll_centavos'] = str(_valor_centavos(m.group(1))) if m else '0'
 
     # ISSQN Retido — default 0 (não retido)
