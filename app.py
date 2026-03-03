@@ -1499,6 +1499,31 @@ def _extrair_numero_nota(texto):
     return cand[-1][0]
 
 
+def _parse_endereco_por_virgula(endereco):
+    """
+    Regra:
+    - 1º trecho: rua
+    - 2º trecho: numero
+    - se houver 4+ trechos: 3º = complemento, 4º = bairro
+    - se houver 3 trechos: 3º = bairro
+    """
+    partes = [p.strip() for p in (endereco or '').split(',')]
+    partes = [p for p in partes if p != '']
+
+    rua = partes[0] if len(partes) >= 1 else ''
+    numero = partes[1] if len(partes) >= 2 else ''
+    complemento = ''
+    bairro = ''
+
+    if len(partes) >= 4:
+        complemento = partes[2]
+        bairro = partes[3]
+    elif len(partes) == 3:
+        bairro = partes[2]
+
+    return rua, numero, complemento, bairro
+
+
 def _chars_para_texto(chars):
     """Converte lista de caracteres posicionados em texto, inserindo espaços pelo gap."""
     if not chars:
@@ -1614,15 +1639,14 @@ def processar_nfs_pdf(pdf_path):
             if d['cep'] in linha_end or m_cep.group(1) in linha_end or ',' in linha_end:
                 linha_limpa = re.sub(r'\s*\d{5}-?\d{3}\s*.*$', '', linha_end).strip()
                 linha_limpa = re.sub(r'^(Endere[c\u00e7]o|Logradouro)\s*[:\-]?\s*', '', linha_limpa, flags=re.IGNORECASE).strip()
-                partes_end = [p.strip() for p in linha_limpa.split(',')]
-                if len(partes_end) >= 2:
-                    d['rua'] = partes_end[0]
-                    d['numero'] = partes_end[1]
-                    if len(partes_end) == 3:
-                        d['bairro'] = partes_end[2]
-                    elif len(partes_end) >= 4:
-                        d['complemento'] = partes_end[2]
-                        d['bairro'] = partes_end[3]
+                rua, numero, complemento, bairro = _parse_endereco_por_virgula(linha_limpa)
+                if rua and numero:
+                    d['rua'] = rua
+                    d['numero'] = numero
+                    if complemento:
+                        d['complemento'] = complemento
+                    if bairro:
+                        d['bairro'] = bairro
 
         linhas_emit = secao_emitente.splitlines()
         for i, linha in enumerate(linhas_emit):
@@ -1637,20 +1661,20 @@ def processar_nfs_pdf(pdf_path):
                     d['ibge'] = _ibge_municipio(m_cidade.group(1).strip())[1]
                     linha_limpa = linha_limpa[:m_cidade.start()].strip()
 
-                partes_end = [p.strip() for p in linha_limpa.split(',')]
-                n = len(partes_end)
+                rua, numero, complemento, bairro = _parse_endereco_por_virgula(linha_limpa)
+                n = len([p for p in (linha_limpa or '').split(',') if p.strip() != ''])
                 if not d['rua']:
-                    d['rua'] = partes_end[0] if n > 0 else ''
+                    d['rua'] = rua
                 if not d['numero']:
-                    d['numero'] = partes_end[1] if n > 1 else ''
-                if n == 3:
-                    if not d['bairro']:
-                        d['bairro'] = partes_end[2]
-                elif n >= 4:
+                    d['numero'] = numero
+                if n >= 4:
                     if not d['complemento']:
-                        d['complemento'] = partes_end[2]
+                        d['complemento'] = complemento
                     if not d['bairro']:
-                        d['bairro'] = partes_end[3]
+                        d['bairro'] = bairro
+                elif n == 3:
+                    if not d['bairro']:
+                        d['bairro'] = bairro
                 elif n <= 2:
                     for prox in linhas_emit[i + 1:i + 7]:
                         prox = re.sub(r'\s+coluna\s+\w+', '', prox, flags=re.IGNORECASE).strip(' ,')
