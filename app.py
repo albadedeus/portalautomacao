@@ -1769,6 +1769,23 @@ def processar_nfs_pdf(pdf_path):
     cofins_c = int(_extrair_valor_por_rotulo(tf, r'\bC[O0]FINS\b') or 0)
     contrib_c = int(_extrair_valor_por_rotulo(tf, r'Contribui[cç][oõ]es\s*Sociais|\bCSLL\b') or 0)
 
+    # Consistência por alíquotas federais usuais (1,5% / 0,65% / 3% / 1%)
+    # quando OCR embaralha valores e repete PIS/IRRF em outros campos.
+    if valor_nota is not None:
+        irrf_calc = _cents(valor_nota * 0.015)
+        pis_calc = _cents(valor_nota * 0.0065)
+        cofins_calc = _cents(valor_nota * 0.03)
+        csll_calc = _cents(valor_nota * 0.01)
+
+        if irrf_c <= 0:
+            irrf_c = irrf_calc
+        if pis_c <= 0:
+            pis_c = pis_calc
+        if cofins_c <= 0 or cofins_c == pis_c:
+            cofins_c = cofins_calc
+        if contrib_c <= 0 or contrib_c == irrf_c:
+            contrib_c = csll_calc
+
     # ── Valor total ───────────────────────────────────────────────────────
     m_vt = re.search(r'VALOR TOTAL DA NFS-E(.*?)TOTAIS APROXIMADOS', t, re.DOTALL)
     tv = m_vt.group(1) if m_vt else ''
