@@ -413,17 +413,24 @@
         // Monta tabela com dados extraídos de cada nota
         let linhasTabela = data.resultados.map(r => {
           const d = r.dados;
-          const valor = d.valor_centavos ? 'R$ ' + (parseInt(d.valor_centavos)/100).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
+          const numeroNota = d.AT || d.numero_nota || '';
+          const dataEmissao = d.T || d.data_emissao || '';
+          const razao = d.E || d.razao_social || '';
+          const cnpj = d.D || d.cnpj_prestador || '';
+          const uf = d.H || d.uf || '';
+          const aliquota = (d.Y !== undefined && d.Y !== null && d.Y !== '') ? d.Y : d.aliquota_centesimos;
+          const valorCent = (d.AG !== undefined && d.AG !== null && d.AG !== '') ? d.AG : d.valor_centavos;
+          const valor = valorCent ? 'R$ ' + (parseInt(valorCent)/100).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
           return `
             <tr>
               <td title="${r.arquivo}">${r.arquivo.length > 30 ? r.arquivo.substring(0,30)+'…' : r.arquivo}</td>
-              <td>${d.numero_nota || '<span class="vazio">—</span>'}</td>
-              <td>${d.data_emissao || '<span class="vazio">—</span>'}</td>
-              <td title="${d.razao_social}">${d.razao_social ? (d.razao_social.length > 30 ? d.razao_social.substring(0,30)+'…' : d.razao_social) : '<span class="vazio">—</span>'}</td>
-              <td>${d.cnpj_prestador ? d.cnpj_prestador.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5') : '<span class="vazio">—</span>'}</td>
+              <td>${numeroNota || '<span class="vazio">—</span>'}</td>
+              <td>${dataEmissao || '<span class="vazio">—</span>'}</td>
+              <td title="${razao}">${razao ? (razao.length > 30 ? razao.substring(0,30)+'…' : razao) : '<span class="vazio">—</span>'}</td>
+              <td>${cnpj ? cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5') : '<span class="vazio">—</span>'}</td>
               <td>${valor}</td>
-              <td>${d.uf || '<span class="vazio">—</span>'}</td>
-              <td>${d.aliquota_centesimos ? (parseInt(d.aliquota_centesimos)/100).toFixed(2)+'%' : '<span class="vazio">—</span>'}</td>
+              <td>${uf || '<span class="vazio">—</span>'}</td>
+              <td>${aliquota ? (parseInt(aliquota)/100).toFixed(2)+'%' : '<span class="vazio">—</span>'}</td>
             </tr>`;
         }).join('');
 

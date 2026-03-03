@@ -1323,6 +1323,7 @@ _IBGE_MAP = {
     'BELO HORIZONTE': ('MG', '3106200'), 'BELOHORIZONTE': ('MG', '3106200'),
     'SALVADOR': ('BA', '2927408'),
     'CURITIBA': ('PR', '4106902'),
+    'JOINVILLE': ('SC', '4209102'),
     'RECIFE': ('PE', '2611606'),
     'MANAUS': ('AM', '1302603'),
     'PORTO ALEGRE': ('RS', '4314902'), 'PORTOALEGRE': ('RS', '4314902'),
@@ -1638,11 +1639,26 @@ def processar_nfs_pdf(pdf_path):
     def _cents(v):
         return int(round(float(v) * 100)) if v is not None else None
 
+    def _label_rx(label):
+        # Aceita labels com ou sem espaços (ex.: "NúmerodaNFS-e").
+        return re.escape(label).replace(r'\ ', r'\s*')
+
     def _campo(label, texto=None):
-        """Extrai a linha seguinte ao rótulo exato (estrutura DANFSe)."""
+        """Extrai valor de um rótulo; suporta valor na próxima linha ou na mesma linha."""
         src = texto if texto is not None else t
-        m = re.search(re.escape(label) + r'\n(.*?)(?=\n[A-ZÁÉÍÓÚ]|\Z)', src, re.DOTALL)
-        return _lim(m.group(1)) if m else ""
+        lrx = _label_rx(label)
+
+        # Valor na linha seguinte (formato padrão DANFSe).
+        m = re.search(lrx + r'\s*\n([^\n]*)', src, re.IGNORECASE)
+        if m:
+            return _lim(m.group(1))
+
+        # Valor na mesma linha.
+        m = re.search(lrx + r'\s*[:\-]?\s*([^\n]+)', src, re.IGNORECASE)
+        if m:
+            return _lim(m.group(1))
+
+        return ""
 
     def _extrair_uf_cidade(texto_raw):
         m = re.match(r'^(.+?)\s*[-–]\s*([A-Za-z]{2})$', str(texto_raw).strip())
@@ -1651,7 +1667,11 @@ def processar_nfs_pdf(pdf_path):
         return None, str(texto_raw).upper().strip()
 
     # ── Cabeçalho ───────────────────────────────────────────────────────
-    num_nota     = _campo('Número da NFS-e')
+    num_nota     = _sd(_campo('Número da NFS-e'))
+    if not num_nota:
+        m_num = re.search(r'N[uú]mero\s*da\s*NFS-e\s*([0-9 .-]{5,})', t, re.IGNORECASE)
+        if m_num:
+            num_nota = _sd(m_num.group(1))
     data_emissao = _campo('Data e Hora da emissão da NFS-e')
     if data_emissao:
         data_emissao = data_emissao.split()[0]   # só a data, sem hora
@@ -1661,7 +1681,7 @@ def processar_nfs_pdf(pdf_path):
     ano_comp    = int(competencia[6:10]) if len(competencia) == 10 else ''
 
     # Série: só preenche se for número pequeno (≤ 100); DPS 70000 é ID interno
-    serie_dps = _campo('Série da DPS')
+    serie_dps = _sd(_campo('Série da DPS'))
     serie_val = ''
     if serie_dps and serie_dps.isdigit() and int(serie_dps) <= 100:
         serie_val = int(serie_dps)
@@ -1712,14 +1732,16 @@ def processar_nfs_pdf(pdf_path):
     if not uf_prest:
         uf_prest, cidade_prest = uf_emit, cidade_emit
 
-    m_desc = re.search(r'Descrição do Serviço\n(.*?)\nTRIBUTAÇÃO MUNICIPAL', t, re.DOTALL)
+    m_desc = re.search(r'Descri[cç][aã]o do Servi[cç]o\s*\n(.*?)\nTRIBUTA', t, re.DOTALL | re.IGNORECASE)
     if m_desc:
         desc_raw  = _lim(m_desc.group(1))
         primeira  = desc_raw.split('\n')[0].split('Retenç')[0].strip()
         if len(primeira) > 10:
             desc_raw = primeira
         desc_raw  = re.sub(r'(\d),(\d)', r'\1\2', desc_raw)
-        descricao = re.sub(r'[^A-Za-z0-9À-ÿ\s]', ' ', desc_raw)
+        desc_sem_acento = unicodedata.normalize('NFD', desc_raw)
+        desc_sem_acento = ''.join(ch for ch in desc_sem_acento if unicodedata.category(ch) != 'Mn')
+        descricao = re.sub(r'[^A-Za-z0-9\s]', ' ', desc_sem_acento)
         descricao = re.sub(r'\s+', ' ', descricao).strip().upper()
     else:
         descricao = ""
@@ -1732,17 +1754,12 @@ def processar_nfs_pdf(pdf_path):
     aliquota = float(m_aliq.group(1).replace(',', '.')) if m_aliq else None
 
     # ── Tributação federal ────────────────────────────────────────────────
-    m_fed = re.search(r'TRIBUTAÇÃO FEDERAL(.*?)VALOR TOTAL', t, re.DOTALL)
+    m_fed = re.search(r'TRIBUTA.{0,6}O\s*FEDERAL(.*?)(?:VALOR\s*TOTAL|TOTAIS\s*APROXIMADOS|$)', t, re.DOTALL | re.IGNORECASE)
     tf = m_fed.group(1) if m_fed else ''
-
-    m_irrf   = re.search(r'IRRF\n(R\$\s*[\d.,]+)', tf)
-    irrf     = _to_float(m_irrf.group(1))   if m_irrf   else None
-    m_contrib = re.search(r'Contribuições Sociais - Retidas\n(R\$\s*[\d.,]+)', tf)
-    contrib   = _to_float(m_contrib.group(1)) if m_contrib else None
-    m_pis    = re.search(r'PIS - Débito Apuração Própria\n(R\$\s*[\d.,]+)', tf)
-    pis      = _to_float(m_pis.group(1))    if m_pis    else None
-    m_cof    = re.search(r'COFINS - Débito Apuração Própria\n(R\$\s*[\d.,]+)', tf)
-    cofins   = _to_float(m_cof.group(1))    if m_cof    else None
+    irrf_c = int(_extrair_tributo_segmentado(tf, r'\bIRRF\b', [r'\bPIS\b', r'\bC[O0]FINS\b', r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b']) or 0)
+    pis_c = int(_extrair_tributo_segmentado(tf, r'\bPIS\b', [r'\bC[O0]FINS\b', r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b']) or 0)
+    cofins_c = int(_extrair_tributo_segmentado(tf, r'\bC[O0]FINS\b', [r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b', r'\bPIS\b']) or 0)
+    contrib_c = int(_extrair_tributo_segmentado(tf, r'Contribui[cç][oõ]es\s*Sociais|\bCSLL\b', [r'\bIRRF\b', r'\bPIS\b', r'\bC[O0]FINS\b']) or 0)
 
     # ── Valor total ───────────────────────────────────────────────────────
     m_vt = re.search(r'VALOR TOTAL DA NFS-E(.*?)TOTAIS APROXIMADOS', t, re.DOTALL)
@@ -1768,8 +1785,8 @@ def processar_nfs_pdf(pdf_path):
         'O':  telefone_emit,
         'P':  email_emit,
         'Q':  7,
-        'R':  int(num_nota) if num_nota and num_nota.isdigit() else '',
-        'S':  serie_val,
+        'R':  67,
+        'S':  '',
         'T':  data_emissao or '',
         'U':  1,
         'V':  mes_comp,
@@ -1784,14 +1801,14 @@ def processar_nfs_pdf(pdf_path):
         'AE': None, 'AF': None,
         'AG': _cents(valor_nota),
         'AH': None, 'AI': None, 'AJ': None, 'AK': None,
-        'AL': _cents(irrf),
-        'AM': _cents(pis),
-        'AN': _cents(cofins),
-        'AO': _cents(contrib),
+        'AL': irrf_c if irrf_c > 0 else None,
+        'AM': pis_c if pis_c > 0 else None,
+        'AN': cofins_c if cofins_c > 0 else None,
+        'AO': contrib_c if contrib_c > 0 else None,
         'AP': None, 'AQ': None,
         'AR': 0,
         'AS': None,
-        'AT': 495859,
+        'AT': int(num_nota) if num_nota and num_nota.isdigit() else None,
     }
 
 
