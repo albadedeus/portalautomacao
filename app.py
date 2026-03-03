@@ -7,6 +7,8 @@ Sistema com autenticação e gerenciamento de usuários/acionistas
 
 from flask import Flask, render_template, request, jsonify, send_file, send_from_directory, redirect, url_for, session
 from functools import wraps
+import pdfplumber
+import re
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -40,9 +42,12 @@ ROYALTIES_CONFIG_FILE = 'data/royalties_config.json'
 ROYALTIES_OUTPUT_FOLDER = 'output_royalties'
 CONCILIACAO_OUTPUT_FOLDER = 'output_conciliacao'
 
+NOTAS_OUTPUT_FOLDER = 'output_notas'
+
 os.makedirs('data', exist_ok=True)
 os.makedirs(ROYALTIES_OUTPUT_FOLDER, exist_ok=True)
 os.makedirs(CONCILIACAO_OUTPUT_FOLDER, exist_ok=True)
+os.makedirs(NOTAS_OUTPUT_FOLDER, exist_ok=True)
 
 # Import do motor de conciliação bancária x contábil
 try:
@@ -1299,6 +1304,366 @@ def api_conciliacao_cliente_download(filename):
     """Download do arquivo de conciliacao cliente"""
     try:
         filepath = os.path.join(CONCILIACAO_OUTPUT_FOLDER, filename)
+        return send_file(filepath, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
+
+# ==================================================================================
+# NOTAS DE SERVIÇOS TOMADOS — PROCESSADOR NFS-e PDF → TXT
+# ==================================================================================
+
+# Mapeamento município → (UF, IBGE) para os municípios mais comuns
+_IBGE_MAP = {
+    'FORTALEZA': ('CE', '2304400'),
+    'SÃO PAULO': ('SP', '3550308'), 'SAOPAULO': ('SP', '3550308'),
+    'RIO DE JANEIRO': ('RJ', '3304557'), 'RIODEJANEIRO': ('RJ', '3304557'),
+    'BELO HORIZONTE': ('MG', '3106200'), 'BELOHORIZONTE': ('MG', '3106200'),
+    'SALVADOR': ('BA', '2927408'),
+    'CURITIBA': ('PR', '4106902'),
+    'RECIFE': ('PE', '2611606'),
+    'MANAUS': ('AM', '1302603'),
+    'PORTO ALEGRE': ('RS', '4314902'), 'PORTOALEGRE': ('RS', '4314902'),
+    'GOIÂNIA': ('GO', '5208707'), 'GOIANIA': ('GO', '5208707'),
+    'BRASÍLIA': ('DF', '5300108'), 'BRASILIA': ('DF', '5300108'),
+    'CAMPINAS': ('SP', '3509502'),
+    'NATAL': ('RN', '2408102'),
+    'MACEIÓ': ('AL', '2704302'), 'MACEIO': ('AL', '2704302'),
+    'TERESINA': ('PI', '2211001'),
+    'CAMPO GRANDE': ('MS', '5002704'), 'CAMPOGRANDE': ('MS', '5002704'),
+    'CUIABÁ': ('MT', '5103403'), 'CUIABA': ('MT', '5103403'),
+    'BELÉM': ('PA', '1501402'), 'BELEM': ('PA', '1501402'),
+    'JOÃO PESSOA': ('PB', '2507507'), 'JOAOPESSOA': ('PB', '2507507'),
+    'ARACAJU': ('SE', '2800308'),
+    'PORTO VELHO': ('RO', '1100205'), 'PORTOVELHO': ('RO', '1100205'),
+    'MACAPÁ': ('AP', '1600303'), 'MACAPA': ('AP', '1600303'),
+    'BOA VISTA': ('RR', '1400100'), 'BOAVISTA': ('RR', '1400100'),
+    'PALMAS': ('TO', '1721000'),
+    'RIO BRANCO': ('AC', '1200401'), 'RIOBRANCO': ('AC', '1200401'),
+    'FLORIANÓPOLIS': ('SC', '4205407'), 'FLORIANOPOLIS': ('SC', '4205407'),
+    'VITÓRIA': ('ES', '3205309'), 'VITORIA': ('ES', '3205309'),
+}
+
+
+def _so_digitos(txt):
+    return re.sub(r'\D', '', txt or '')
+
+
+def _valor_centavos(txt):
+    """Converte 'R$1.234,56' ou '1.234,56' para centavos inteiros."""
+    limpo = re.sub(r'[R$\s]', '', txt or '').replace('.', '').replace(',', '.')
+    try:
+        return int(round(float(limpo) * 100))
+    except Exception:
+        return 0
+
+
+def _ibge_municipio(nome_municipio):
+    """Retorna (uf, ibge) para um nome de município, ou ('','') se não encontrado."""
+    chave = re.sub(r'\s+', ' ', nome_municipio.strip().upper())
+    # remove acentos simples para compatibilidade
+    chave_ascii = chave
+    for a, b in [('Ã','A'),('Â','A'),('Á','A'),('À','A'),('É','E'),('Ê','E'),
+                 ('Í','I'),('Ó','O'),('Ô','O'),('Õ','O'),('Ú','U'),('Ç','C')]:
+        chave_ascii = chave_ascii.replace(a, b)
+    return _IBGE_MAP.get(chave) or _IBGE_MAP.get(chave_ascii) or ('', '')
+
+
+def processar_nfs_pdf(pdf_path):
+    """Extrai campos de uma NFS-e (PDF) e retorna dicionário com os dados."""
+    with pdfplumber.open(pdf_path) as pdf:
+        texto = '\n'.join(page.extract_text() or '' for page in pdf.pages)
+
+    d = {}
+
+    # --- Número da NFS-e ---
+    m = re.search(r'N[uú]merodaNFS-e\D+?(\d{3,8})', texto)
+    d['numero_nota'] = m.group(1) if m else ''
+
+    # --- Série da DPS ---
+    m = re.search(r'S[eé]riedaDPS\s+(\d+)', texto)
+    d['serie'] = m.group(1) if m else '1'
+
+    # --- Datas: primeira data DD/MM/AAAA no documento = emissão/competência ---
+    datas = re.findall(r'\b(\d{2}/\d{2}/\d{4})\b', texto)
+    if datas:
+        d['data_emissao'] = datas[0]
+        partes = datas[0].split('/')
+        d['mes'] = partes[1]
+        d['ano'] = partes[2]
+    else:
+        d['data_emissao'] = d['mes'] = d['ano'] = ''
+
+    # --- Seção EMITENTE (entre "EMITENTEDANFS-e" e "TOMADORDOSERVI") ---
+    m_emit = re.search(r'EMITENTEDANFS-e(.*?)TOMADORDOSERVI', texto, re.DOTALL)
+    secao_emitente = m_emit.group(1) if m_emit else texto
+
+    # CNPJ do prestador (primeiro CNPJ na seção emitente)
+    m = re.search(r'(\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2})', secao_emitente)
+    d['cnpj_prestador'] = _so_digitos(m.group(1)) if m else ''
+
+    # Telefone — formato (XX) XXXXX-XXXX ou só dígitos na seção emitente
+    m = re.search(r'\((\d{2})\)\s*(\d{4,5})-?(\d{4})', secao_emitente)
+    if m:
+        d['telefone'] = m.group(1) + m.group(2) + m.group(3)
+    else:
+        m = re.search(r'\b(\d{10,11})\b', secao_emitente)
+        d['telefone'] = m.group(1) if m else ''
+
+    # Email — busca apenas na seção emitente
+    m = re.search(r'[\w.+\-]+@[\w.\-]+\.[a-zA-Z]{2,}', secao_emitente)
+    d['email'] = m.group(0) if m else ''
+
+    # Razão Social — linhas após "Nome/NomeEmpresarial", descartando emails e anotações
+    razao = ''
+    m_nome = re.search(r'Nome/NomeEmpresarial(?:\s+E-mail)?\s*\n([\s\S]+?)(?=Endere[cç]o)', secao_emitente)
+    if m_nome:
+        for linha in m_nome.group(1).splitlines():
+            linha = linha.strip()
+            if not linha or '@' in linha:
+                continue
+            # Pula linhas que são só anotações como "E-mail coluna P"
+            if re.fullmatch(r'[A-Za-z\-]+\s+coluna\s+\w+', linha):
+                continue
+            # Pula linhas que parecem cabeçalhos (só palavras genéricas)
+            if re.fullmatch(r'(E-mail|Endere[cç]o|Munic[ií]pio|CEP|Inscri[cç][aã]o\s*Municipal)', linha, re.I):
+                continue
+            if len(linha) > 5:
+                razao = linha
+                break
+    # Fallback: padrão de razão social com sufixo empresarial
+    if not razao:
+        m = re.search(r'([A-Z][A-Z\s&.,/]{4,}(?:LTDA|S\.?A\.?|ME|EPP|EIRELI|S/A)\.?)', secao_emitente)
+        if m:
+            razao = m.group(1).strip()
+    d['razao_social'] = razao
+
+    # --- Endereço do prestador ---
+    # Estratégia: localizar o CEP na seção emitente e analisar a linha que o contém
+    d['rua'] = d['numero'] = d['complemento'] = d['bairro'] = ''
+    d['uf'] = d['ibge'] = ''
+    d['cep'] = ''
+
+    m_cep = re.search(r'\b(\d{5}-\d{3})\b', secao_emitente)
+    if m_cep:
+        d['cep'] = _so_digitos(m_cep.group(1))
+        # Pega as linhas da seção emitente e encontra a que contém o CEP
+        for linha in secao_emitente.splitlines():
+            if m_cep.group(1) in linha or d['cep'] in linha:
+                # Remove o CEP e qualquer anotação "coluna X" do final
+                linha_limpa = re.sub(r'\s*\d{5}-?\d{3}\s*.*$', '', linha).strip()
+                linha_limpa = re.sub(r'\s+coluna\s+\w+', '', linha_limpa).strip()
+                linha_limpa = re.sub(r'\s+(?:UF|CEP)\s*$', '', linha_limpa).strip()
+                # Encontra Municipio-UF no final da linha limpa
+                m_cidade = re.search(r'\s+([A-Z][A-ZÁÉÍÓÚÂÊÔÃÕÇ]+(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ]+)*)-([A-Z]{2})\s*$', linha_limpa)
+                if m_cidade:
+                    d['uf'] = m_cidade.group(2)
+                    municipio_nome = m_cidade.group(1).strip()
+                    uf_ibge = _ibge_municipio(municipio_nome)
+                    d['ibge'] = uf_ibge[1]
+                    linha_limpa = linha_limpa[:m_cidade.start()].strip()
+                partes_end = [p.strip() for p in linha_limpa.split(',')]
+                d['rua'] = partes_end[0] if len(partes_end) > 0 else ''
+                d['numero'] = partes_end[1] if len(partes_end) > 1 else ''
+                d['complemento'] = partes_end[2] if len(partes_end) > 2 else ''
+                d['bairro'] = partes_end[3] if len(partes_end) > 3 else ''
+                break
+
+    # Se não encontrou UF ainda, tenta padrão CIDADE-UF na seção emitente
+    if not d['uf']:
+        m = re.search(r'\b([A-Z][A-ZÁÉÍÓÚ]+)-([A-Z]{2})\b', secao_emitente)
+        if m:
+            d['uf'] = m.group(2)
+            uf_ibge = _ibge_municipio(m.group(1))
+            d['ibge'] = uf_ibge[1]
+
+    # --- Código de Tributação Nacional ---
+    m = re.search(r'C[oó]digodeTributa[cç][aã]oNacional\D{0,5}([\d.]{5,})', texto)
+    d['cod_tributacao'] = _so_digitos(m.group(1)) if m else '620400001'
+
+    # --- Alíquota (em centésimos: 5,00% → 500) ---
+    m = re.search(r'Al[ií]quotaAplicada\D{0,15}?([\d,\.]+)%', texto)
+    if m:
+        try:
+            d['aliquota_centesimos'] = str(int(round(float(m.group(1).replace(',', '.')) * 100)))
+        except Exception:
+            d['aliquota_centesimos'] = ''
+    else:
+        d['aliquota_centesimos'] = ''
+
+    # --- Descrição do Serviço ---
+    m = re.search(r'Descri[cç][aã]odoServi[cç]o\s*(?:coluna\s*\w+\s*)?([\s\S]*?)(?=TRIBUTA[ÇC])', texto)
+    if m:
+        descr = re.sub(r'\s*coluna\s+\w+', '', m.group(1))
+        descr = ' '.join(descr.split())
+        d['descricao'] = descr
+    else:
+        d['descricao'] = ''
+
+    # --- Local de Prestação ---
+    m = re.search(r'LocaldaPresta[cç][aã]o\s+Pa[ií]sdaPresta[cç][aã]o[\s\S]{0,20}\n?([\w\s]+?)-([A-Z]{2})\b', texto)
+    if m:
+        d['uf_local'] = m.group(2)
+        uf_ibge_local = _ibge_municipio(m.group(1).strip())
+        d['ibge_local'] = uf_ibge_local[1]
+    else:
+        d['uf_local'] = d.get('uf', '')
+        d['ibge_local'] = d.get('ibge', '')
+
+    # --- Valor do Serviço (seção VALOR TOTAL DA NFS-E) ---
+    m = re.search(r'ValordoServi[cç]o\s+DescontoCondicionado[\s\S]{0,60}?\n\s*R\$\s*([\d.,]+)', texto)
+    if not m:
+        m = re.search(r'ValordoServi[cç]o\s+R\$\s*([\d.,]+)', texto)
+    d['valor_centavos'] = str(_valor_centavos(m.group(1))) if m else '0'
+
+    # --- Tributos Federais (seção TRIBUTAÇÃO FEDERAL) ---
+    m_fed = re.search(r'TRIBUTA[ÇC][ÃA]OFEDERAL([\s\S]*?)(?:VALORTOTALDANFS|TOTAISAPROXIMADOS|$)', texto)
+    secao_fed = m_fed.group(1) if m_fed else texto
+
+    # IRRF
+    m = re.search(r'IRRF\D{0,5}([\d.,]+)', secao_fed)
+    d['irrf_centavos'] = str(_valor_centavos(m.group(1))) if m else '0'
+
+    # PIS e COFINS: identificar valores pelos rótulos, com DOTALL
+    # O texto é geralmente: "PIS-Débito... COFINS-Débito...\nR$x,xx Coluna AM R$y,yy Coluna AN"
+    # então buscamos PIS antes de COFINS e pegamos o primeiro valor R$ após cada label
+    m_pis = re.search(r'PIS-D[eé]bitoApura[cç][aã]oPr[oó]pria\D{0,20}?([\d.,]+)', secao_fed)
+    m_cof = re.search(r'COFINS-D[eé]bitoApura[cç][aã]oPr[oó]pria\D{0,20}?([\d.,]+)', secao_fed)
+    if m_pis and m_cof:
+        # Verifica qual aparece primeiro no texto
+        if m_pis.start() < m_cof.start():
+            d['pis_centavos'] = str(_valor_centavos(m_pis.group(1)))
+            d['cofins_centavos'] = str(_valor_centavos(m_cof.group(1)))
+        else:
+            d['pis_centavos'] = str(_valor_centavos(m_cof.group(1)))
+            d['cofins_centavos'] = str(_valor_centavos(m_pis.group(1)))
+    else:
+        d['pis_centavos'] = str(_valor_centavos(m_pis.group(1))) if m_pis else '0'
+        d['cofins_centavos'] = str(_valor_centavos(m_cof.group(1))) if m_cof else '0'
+
+    # CSLL (Contribuições Sociais Retidas)
+    m = re.search(r'Contribui[cç][oõ]esSociais-Retidas\D{0,20}?([\d.,]+)', secao_fed)
+    d['csll_centavos'] = str(_valor_centavos(m.group(1))) if m else '0'
+
+    # --- ISSQN Retido ---
+    m = re.search(r'Reten[cç][aã]odoISSQN\s+(N[aã]oRetido|Retido)', texto)
+    d['issqn_retido'] = '0' if (m and 'N' in m.group(1)) else '1'
+
+    return d
+
+
+def montar_linha_nfs_txt(d):
+    """Monta a linha no formato TXT para importação no TOTVS."""
+    campos = [
+        '2.0',                                    # 1  versão
+        '2',                                      # 2  fixo
+        '2',                                      # 3  fixo
+        d.get('cnpj_prestador', ''),              # 4  CNPJ (só dígitos)
+        d.get('razao_social', ''),                # 5  Razão Social
+        '0',                                      # 6  fixo
+        '1058',                                   # 7  fixo (cód. interno)
+        d.get('uf', ''),                          # 8  UF do prestador
+        d.get('ibge', ''),                        # 9  IBGE do prestador
+        d.get('cep', ''),                         # 10 CEP (só dígitos)
+        d.get('rua', ''),                         # 11 Logradouro
+        d.get('numero', ''),                      # 12 Número
+        d.get('complemento', ''),                 # 13 Complemento
+        d.get('bairro', ''),                      # 14 Bairro
+        d.get('telefone', ''),                    # 15 Telefone (só dígitos)
+        d.get('email', ''),                       # 16 E-mail
+        '7',                                      # 17 fixo
+        '67',                                     # 18 fixo
+        '',                                       # 19 vazio
+        d.get('data_emissao', ''),                # 20 Data emissão DD/MM/AAAA
+        d.get('serie', '1'),                      # 21 Série
+        d.get('mes', ''),                         # 22 Mês (MM)
+        d.get('ano', ''),                         # 23 Ano (AAAA)
+        d.get('cod_tributacao', '620400001'),      # 24 Cód. tributação nacional
+        d.get('aliquota_centesimos', ''),          # 25 Alíquota × 100
+        d.get('descricao', ''),                   # 26 Descrição do serviço
+        '1058',                                   # 27 fixo (local prestação)
+        d.get('uf_local', ''),                    # 28 UF local de prestação
+        d.get('ibge_local', ''),                  # 29 IBGE local de prestação
+        '2',                                      # 30 fixo
+        '',                                       # 31 vazio
+        '',                                       # 32 vazio
+        d.get('valor_centavos', '0'),             # 33 Valor serviço (centavos)
+        '', '', '', '', '',                        # 34-38 vazios
+        d.get('irrf_centavos', '0'),              # 39 IRRF (centavos)
+        d.get('pis_centavos', '0'),               # 40 PIS (centavos)
+        d.get('cofins_centavos', '0'),            # 41 COFINS (centavos)
+        d.get('csll_centavos', '0'),              # 42 CSLL (centavos)
+        '', '',                                   # 43-44 vazios
+        d.get('issqn_retido', '0'),               # 45 ISSQN retido (0=não)
+        '',                                       # 46 vazio
+        d.get('numero_nota', ''),                 # 47 Número da NFS-e
+    ]
+    return ';'.join(campos)
+
+
+@app.route('/notas-servicos')
+@login_required
+def notas_servicos():
+    return render_template('notas_servicos.html', user=session.get('user'))
+
+
+@app.route('/api/notas-servicos/processar', methods=['POST'])
+@login_required
+def api_notas_servicos_processar():
+    arquivos = request.files.getlist('arquivos')
+    if not arquivos or not any(f.filename for f in arquivos):
+        return jsonify({'error': 'Nenhum arquivo enviado'}), 400
+
+    resultados = []
+    linhas_txt = []
+    erros = []
+
+    for arq in arquivos:
+        if not arq.filename.lower().endswith('.pdf'):
+            erros.append(f'{arq.filename}: não é um PDF')
+            continue
+
+        filename = secure_filename(arq.filename)
+        tmp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        arq.save(tmp_path)
+
+        try:
+            dados = processar_nfs_pdf(tmp_path)
+            dados['arquivo_origem'] = arq.filename
+            linha = montar_linha_nfs_txt(dados)
+            linhas_txt.append(linha)
+            resultados.append({'arquivo': arq.filename, 'dados': dados, 'linha': linha})
+        except Exception as e:
+            erros.append(f'{arq.filename}: {str(e)}')
+        finally:
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
+
+    if not linhas_txt:
+        return jsonify({'error': 'Nenhuma nota processada. ' + '; '.join(erros)}), 400
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    nome_txt = f'notas_servicos_{timestamp}.txt'
+    path_txt = os.path.join(NOTAS_OUTPUT_FOLDER, nome_txt)
+    with open(path_txt, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(linhas_txt))
+
+    return jsonify({
+        'success': True,
+        'total': len(linhas_txt),
+        'erros': erros,
+        'arquivo': nome_txt,
+        'resultados': resultados,
+    })
+
+
+@app.route('/api/notas-servicos/download/<filename>')
+@login_required
+def api_notas_servicos_download(filename):
+    try:
+        filepath = os.path.join(NOTAS_OUTPUT_FOLDER, filename)
         return send_file(filepath, as_attachment=True)
     except Exception as e:
         return jsonify({'error': str(e)}), 404

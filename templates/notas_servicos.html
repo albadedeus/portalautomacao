@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notas de Serviços Tomados | TOTVS</title>
+
+  <link rel="icon" type="image/png" href="/static/logo-hexa.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    @font-face {
+      font-family: 'TOTVS-Bold';
+      src: url('/assets/fonts/TOTVS-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --font-sans: 'TOTVS-Bold', sans-serif;
+      --azulescuro: #002233;
+      --azul: #00DBFF;
+      --roxo: #A44DFF;
+      --verde: #00FFD4;
+      --limao: #D9FF65;
+      --laranja: #FF8900;
+      --rosa: #FF009E;
+      --totvs-white: #ffffff;
+      --totvs-black: #000000;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      background: linear-gradient(135deg, var(--azulescuro) 0%, var(--azulescuro) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: linear-gradient(180deg, rgba(0,34,51,0.97), rgba(0,34,51,0.93));
+      border: 1px solid rgba(0, 219, 255, 0.2);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      max-width: 1200px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--azulescuro) 0%, var(--azulescuro) 100%);
+      border-bottom: 4px solid var(--azul);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(0, 219, 255, 0.15);
+    }
+
+    .header-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .header-brand img { height: 36px; }
+    .header-brand span { color: rgba(255,255,255,0.7); font-size: 13px; }
+
+    .header-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid rgba(0, 219, 255, 0.4);
+      border-radius: 6px;
+      color: var(--azul);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    .header-back:hover { background: rgba(0, 219, 255, 0.1); }
+
+    .header-content { padding: 25px 40px 30px; text-align: center; }
+
+    h1 {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    h1 i { color: var(--limao); font-size: 22px; }
+
+    .subtitle { color: var(--azul); font-size: 14px; font-weight: 400; }
+
+    .content { padding: 30px 40px 40px; }
+
+    .upload-area {
+      border: 2px solid rgba(0, 219, 255, 0.22);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      background: rgba(0, 34, 51, 0.78);
+      transition: all 0.3s;
+    }
+    .upload-area:hover {
+      border-color: var(--azul);
+      box-shadow: 0 4px 12px rgba(0, 219, 255, 0.12);
+    }
+
+    .upload-area label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--totvs-white);
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    small { color: rgba(255,255,255,0.72); font-size: 13px; display: block; margin-bottom: 12px; }
+
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid rgba(0, 219, 255, 0.5);
+      border-radius: 8px;
+      background: rgba(0, 34, 51, 0.9);
+      color: var(--totvs-white);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    input[type="file"]:hover { border-color: var(--azul); }
+
+    button {
+      background: linear-gradient(135deg, var(--azul) 0%, var(--roxo) 100%);
+      color: #fff;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 219, 255, 0.3);
+      font-family: var(--font-sans);
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 219, 255, 0.4); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 30px;
+      padding: 30px;
+    }
+    .spinner {
+      border: 4px solid rgba(0,0,0,0.04);
+      border-top: 4px solid var(--azul);
+      border-radius: 50%;
+      width: 50px; height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    .loading-text { color: var(--totvs-white); font-weight: 500; }
+
+    .resultado { margin-top: 30px; border-radius: 12px; display: none; overflow: hidden; }
+    .resultado.sucesso { border: 2px solid var(--verde); display: block; }
+    .resultado.erro { border: 2px solid var(--rosa); display: block; }
+
+    .resultado-header {
+      padding: 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 18px;
+    }
+    .resultado.sucesso .resultado-header { background: var(--verde); color: var(--azulescuro); }
+    .resultado.erro .resultado-header { background: var(--rosa); color: #fff; }
+
+    .resultado-body { padding: 25px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: rgba(0, 34, 51, 0.78);
+      border: 1px solid rgba(0, 219, 255, 0.22);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .stat-value { font-size: 32px; font-weight: 700; color: var(--azul); margin-bottom: 5px; }
+    .stat-label { color: rgba(255,255,255,0.72); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .erros-lista {
+      background: rgba(255, 0, 158, 0.08);
+      border: 1px solid rgba(255, 0, 158, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .erros-lista h4 { color: var(--rosa); margin-bottom: 8px; font-size: 14px; }
+    .erros-lista li { color: rgba(255,255,255,0.8); font-size: 13px; margin-left: 16px; margin-bottom: 4px; }
+
+    /* Tabela de resultados */
+    .tabela-wrap {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 219, 255, 0.2);
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead tr { background: rgba(0, 219, 255, 0.12); }
+    th {
+      padding: 12px 14px;
+      text-align: left;
+      color: var(--azul);
+      font-weight: 700;
+      white-space: nowrap;
+      border-bottom: 1px solid rgba(0, 219, 255, 0.2);
+    }
+    tbody tr { border-bottom: 1px solid rgba(0, 219, 255, 0.08); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(0, 219, 255, 0.04); }
+    td {
+      padding: 10px 14px;
+      color: rgba(255,255,255,0.85);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    td.ok { color: var(--verde); }
+    td.vazio { color: rgba(255,255,255,0.3); font-style: italic; }
+
+    .txt-preview {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(0, 219, 255, 0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 11px;
+      color: var(--limao);
+      word-break: break-all;
+      font-family: monospace;
+    }
+    .txt-preview-label {
+      color: rgba(255,255,255,0.5);
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, var(--verde) 0%, var(--verde) 100%);
+      color: var(--azulescuro);
+      margin-top: 0;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+    .download-btn:hover { box-shadow: 0 6px 20px rgba(0, 255, 212, 0.4); }
+
+    .footer {
+      text-align: center;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, var(--azulescuro) 0%, var(--azulescuro) 100%);
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      border-top: 1px solid rgba(0, 219, 255, 0.2);
+    }
+
+    .overlay { display:none; position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,.5); z-index:9998; }
+    .overlay.show { display:block; }
+    .success-message {
+      display:none; position:fixed; top:50%;left:50%; transform:translate(-50%,-50%);
+      background:var(--verde); color:var(--azulescuro);
+      padding:30px 50px; border-radius:15px; box-shadow:0 10px 40px rgba(0,255,212,.4);
+      z-index:9999; font-size:24px; font-weight:700; animation:slideIn .5s ease-out;
+    }
+    .success-message.show { display:block; }
+    @keyframes slideIn {
+      from { transform:translate(-50%,-60%); opacity:0; }
+      to   { transform:translate(-50%,-50%); opacity:1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay"></div>
+  <div class="success-message" id="successMessage">Processamento Concluído!</div>
+
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <a href="/dashboard" class="header-brand">
+          <img src="/assets/img/TOTVS%20Nordeste%20-%20Logo%20-%20Branco.png" alt="TOTVS Nordeste" onerror="this.style.display='none'" />
+        </a>
+        <a href="/dashboard" class="header-back">
+          <i class="fas fa-arrow-left"></i>
+          Voltar ao Dashboard
+        </a>
+      </div>
+      <div class="header-content">
+        <h1><i class="fas fa-file-invoice"></i> Notas de Serviços Tomados</h1>
+        <p class="subtitle">Leitura de NFS-e em PDF e geração do arquivo TXT para importação no TOTVS</p>
+      </div>
+    </div>
+
+    <div class="content">
+      <form id="formProcessar" enctype="multipart/form-data">
+        <div class="upload-area">
+          <label>
+            <span style="font-size:22px">📄</span>
+            <span>Arquivos NFS-e (PDF)</span>
+          </label>
+          <small>Selecione uma ou mais notas fiscais em PDF. Formato: NFS-e padrão nacional.</small>
+          <input type="file" name="arquivos" id="arquivos" accept=".pdf" multiple required />
+        </div>
+
+        <button type="submit" id="btnProcessar">
+          <i class="fas fa-bolt"></i> Processar Notas
+        </button>
+      </form>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p class="loading-text">Lendo PDFs e extraindo dados...</p>
+      </div>
+
+      <div class="resultado" id="resultado"></div>
+    </div>
+
+    <div class="footer">
+      Notas de Serviços Tomados | TOTVS &copy; 2025
+    </div>
+  </div>
+
+  <script>
+    function showSuccessMessage() {
+      const overlay = document.getElementById('overlay');
+      const msg = document.getElementById('successMessage');
+      overlay.classList.add('show');
+      msg.classList.add('show');
+      setTimeout(() => { overlay.classList.remove('show'); msg.classList.remove('show'); }, 3000);
+    }
+
+    async function baixarArquivo(url, nome) {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Falha no download');
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl; a.download = nome;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(blobUrl);
+    }
+
+    function celulaValor(val) {
+      if (!val || val === '0' || val === '') return `<td class="vazio">—</td>`;
+      return `<td class="ok">${val}</td>`;
+    }
+
+    document.getElementById('formProcessar').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const btn = document.getElementById('btnProcessar');
+      const loading = document.getElementById('loading');
+      const resultado = document.getElementById('resultado');
+
+      btn.disabled = true;
+      loading.style.display = 'block';
+      resultado.style.display = 'none';
+      resultado.className = 'resultado';
+
+      try {
+        const resp = await fetch('/api/notas-servicos/processar', { method: 'POST', body: formData });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.success) throw new Error(data.error || 'Erro desconhecido');
+
+        // Monta alertas de erros parciais
+        let errosHtml = '';
+        if (data.erros && data.erros.length > 0) {
+          const itens = data.erros.map(e => `<li>${e}</li>`).join('');
+          errosHtml = `
+            <div class="erros-lista">
+              <h4><i class="fas fa-exclamation-triangle"></i> Avisos (${data.erros.length})</h4>
+              <ul>${itens}</ul>
+            </div>`;
+        }
+
+        // Monta tabela com dados extraídos de cada nota
+        let linhasTabela = data.resultados.map(r => {
+          const d = r.dados;
+          const valor = d.valor_centavos ? 'R$ ' + (parseInt(d.valor_centavos)/100).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
+          return `
+            <tr>
+              <td title="${r.arquivo}">${r.arquivo.length > 30 ? r.arquivo.substring(0,30)+'…' : r.arquivo}</td>
+              <td>${d.numero_nota || '<span class="vazio">—</span>'}</td>
+              <td>${d.data_emissao || '<span class="vazio">—</span>'}</td>
+              <td title="${d.razao_social}">${d.razao_social ? (d.razao_social.length > 30 ? d.razao_social.substring(0,30)+'…' : d.razao_social) : '<span class="vazio">—</span>'}</td>
+              <td>${d.cnpj_prestador ? d.cnpj_prestador.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5') : '<span class="vazio">—</span>'}</td>
+              <td>${valor}</td>
+              <td>${d.uf || '<span class="vazio">—</span>'}</td>
+              <td>${d.aliquota_centesimos ? (parseInt(d.aliquota_centesimos)/100).toFixed(2)+'%' : '<span class="vazio">—</span>'}</td>
+            </tr>`;
+        }).join('');
+
+        // Prévia das linhas TXT
+        let txtPrevia = data.resultados.map(r => `
+          <div class="txt-preview-label">${r.arquivo}</div>
+          <div class="txt-preview">${r.linha}</div>`).join('');
+
+        resultado.className = 'resultado sucesso';
+        resultado.innerHTML = `
+          <div class="resultado-header">Processamento Concluído com Sucesso</div>
+          <div class="resultado-body">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value">${data.total}</div>
+                <div class="stat-label">Notas Processadas</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" style="color:var(--rosa)">${data.erros ? data.erros.length : 0}</div>
+                <div class="stat-label">Erros / Avisos</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" style="color:var(--verde)">1</div>
+                <div class="stat-label">Arquivo TXT Gerado</div>
+              </div>
+            </div>
+
+            ${errosHtml}
+
+            <div class="tabela-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Arquivo PDF</th>
+                    <th>Nº NFS-e</th>
+                    <th>Data Emissão</th>
+                    <th>Prestador</th>
+                    <th>CNPJ</th>
+                    <th>Valor</th>
+                    <th>UF</th>
+                    <th>Alíquota</th>
+                  </tr>
+                </thead>
+                <tbody>${linhasTabela}</tbody>
+              </table>
+            </div>
+
+            <details style="margin-bottom:20px">
+              <summary style="cursor:pointer;color:var(--azul);font-size:13px;padding:8px 0">
+                <i class="fas fa-code"></i> Visualizar linhas TXT geradas
+              </summary>
+              <div style="margin-top:12px">${txtPrevia}</div>
+            </details>
+
+            <button class="download-btn" id="btnBaixar">
+              <i class="fas fa-download"></i> Baixar Arquivo TXT
+            </button>
+          </div>`;
+
+        document.getElementById('btnBaixar').addEventListener('click', () => {
+          baixarArquivo('/api/notas-servicos/download/' + data.arquivo, data.arquivo);
+        });
+
+        // Download automático
+        await baixarArquivo('/api/notas-servicos/download/' + data.arquivo, data.arquivo);
+        showSuccessMessage();
+
+      } catch (err) {
+        resultado.className = 'resultado erro';
+        resultado.innerHTML = `
+          <div class="resultado-header">Erro no Processamento</div>
+          <div class="resultado-body">
+            <p style="color:rgba(255,255,255,0.8);text-align:center">${err.message}</p>
+          </div>`;
+      } finally {
+        btn.disabled = false;
+        loading.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
