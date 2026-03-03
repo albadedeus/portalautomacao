@@ -1608,236 +1608,236 @@ def _extrair_texto_nfs(pdf_path):
 
 
 def processar_nfs_pdf(pdf_path):
-    """Extrai campos de uma NFS-e (PDF) e retorna dicionario com os dados."""
-    texto = _extrair_texto_nfs(pdf_path)
-    d = {}
+    """Extrai campos de uma NFS-e (PDF) e retorna dict com chaves coluna_*.
 
-    d['numero_nota'] = _extrair_numero_nota(texto)
+    Usa pdfplumber.extract_text() (mais simples e confiável que extração
+    char-a-char) e retorna valores tipados: float para monetários/alíquota,
+    int para ISSQN/série/mês/ano, str para os demais.
+    montar_linha_nfs_txt() converte para o formato TXT do TOTVS.
+    """
+    with pdfplumber.open(pdf_path) as pdf:
+        texto = "\n".join(p.extract_text() or "" for p in pdf.pages)
+    t = texto
 
-    m = re.search(r'S[e\u00e9]rie\s*da\s*DPS\s+(\d+)', texto, re.IGNORECASE)
-    d['serie'] = m.group(1) if m else '1'
+    def _lim(v):
+        return re.sub(r'\s+', ' ', v).strip() if v else ""
 
-    datas = re.findall(r'\b(\d{2}/\d{2}/\d{4})\b', texto)
-    if datas:
-        d['data_emissao'] = datas[0]
-        d['mes'] = datas[0].split('/')[1]
-        d['ano'] = datas[0].split('/')[2]
-    else:
-        d['data_emissao'] = d['mes'] = d['ano'] = ''
+    def _to_float(v):
+        if not v or str(v).strip() in ("-", ""):
+            return None
+        s = re.sub(r'[R$\s]', '', str(v)).replace('.', '').replace(',', '.')
+        try:
+            return float(s)
+        except ValueError:
+            return None
 
-    m_emit = re.search(r'EMITENTE\s*DA\s*NFS-e(.*?)TOMADOR\s*DO\s*SERVI', texto, re.DOTALL | re.IGNORECASE)
-    secao_emitente = m_emit.group(1) if m_emit else texto
+    # ── Número da nota ──────────────────────────────────────────────────
+    num_nota = _extrair_numero_nota(t)
 
-    m = re.search(r'(\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2})', secao_emitente)
-    d['cnpj_prestador'] = _so_digitos(m.group(1)) if m else ''
+    # ── Série ───────────────────────────────────────────────────────────
+    m = re.search(r'S[eé]rie\s*da\s*DPS\s+(\d+)', t, re.IGNORECASE)
+    if not m:
+        m = re.search(r'N[uú]mero\s*da\s*DPS\s+S[eé]rie\s*da\s*DPS[\s\S]{0,80}?\n\d+\s+(\d+)', t, re.IGNORECASE)
+    serie = m.group(1) if m else '1'
 
-    m = re.search(r'\((\d{2})\)\s*(\d{4,5})-?(\d{4})', secao_emitente)
-    if m:
-        d['telefone'] = m.group(1) + m.group(2) + m.group(3)
-    else:
-        m = re.search(r'\b(\d{10,11})\b', secao_emitente)
-        d['telefone'] = m.group(1) if m else ''
+    # ── Data emissão e competência ──────────────────────────────────────
+    datas = re.findall(r'\b(\d{2}/\d{2}/\d{4})\b', t)
+    data_emissao = datas[0] if datas else ""
+    mes_comp = int(data_emissao[3:5]) if data_emissao else None
+    ano_comp = int(data_emissao[6:10]) if data_emissao else None
+    m_comp = re.search(r'Compet[eê]ncia\s*da\s*NFS-e\s+(\d{2}/\d{2}/\d{4})', t, re.IGNORECASE)
+    if m_comp:
+        comp = m_comp.group(1)
+        mes_comp = int(comp[3:5])
+        ano_comp = int(comp[6:10])
 
-    m = re.search(r'[\w.+\-]+@[\w.\-]+\.[a-zA-Z]{2,}', secao_emitente)
-    d['email'] = m.group(0).lower() if m else ''
+    # ── Seção emitente ──────────────────────────────────────────────────
+    m_emit = re.search(r'EMITENTE\s*DA\s*NFS-e(.*?)TOMADOR\s*DO\s*SERVI', t, re.DOTALL | re.IGNORECASE)
+    sec_emit = m_emit.group(1) if m_emit else t
 
-    razao = ''
-    m_nome = re.search(r'Nome/Nome\s*Empresarial(?:\s+E-mail)?\s*\n([\s\S]+?)(?=Endere[c\u00e7]o)', secao_emitente, re.IGNORECASE)
+    # ── CNPJ ────────────────────────────────────────────────────────────
+    m = re.search(r'(\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2})', sec_emit)
+    cnpj = _so_digitos(m.group(1)) if m else ""
+
+    # ── Razão social ────────────────────────────────────────────────────
+    razao = ""
+    m_nome = re.search(r'Nome/Nome\s*Empresarial(?:\s+E-mail)?\s*\n([\s\S]+?)(?=Endere[çc]o)', sec_emit, re.IGNORECASE)
     if m_nome:
         for linha in m_nome.group(1).splitlines():
             linha = linha.strip()
             if not linha or '@' in linha:
                 continue
-            if re.fullmatch(r'[A-Za-z\-]+\s+coluna\s+\w+', linha):
-                continue
-            if re.fullmatch(r'(E-mail|Endere[c\u00e7]o|Munic[i\u00ed]pio|CEP|Inscri[c\u00e7][a\u00e3]o\s*Municipal)', linha, re.I):
+            if re.fullmatch(r'(E-mail|Endere[çc]o|Munic[íi]pio|CEP|Inscri[çc][ãa]o\s*Municipal)', linha, re.I):
                 continue
             if len(linha) > 5:
                 razao = linha
                 break
     if not razao:
-        m = re.search(r'([A-Z\u00c0-\u017f][A-Z\u00c0-\u017f\s&.,/]{4,}(?:LTDA|S\.?A\.?|ME|EPP|EIRELI|S/A)\.?)', secao_emitente)
-        if m:
-            razao = m.group(1).strip()
-    d['razao_social'] = razao
+        m = re.search(r'([A-ZÁÉÍÓÚÃÕÊ][A-ZÁÉÍÓÚÃÕÊ\s&.,/]{4,}(?:LTDA|S\.?A\.?|ME|EPP|EIRELI|S/A)\.?)', sec_emit)
+        razao = m.group(1).strip() if m else ""
 
-    d['rua'] = d['numero'] = d['complemento'] = d['bairro'] = ''
-    d['uf'] = d['ibge'] = d['cep'] = ''
+    # ── Telefone e e-mail ────────────────────────────────────────────────
+    m = re.search(r'\((\d{2})\)\s*(\d{4,5})-?(\d{4})', sec_emit)
+    if m:
+        telefone = m.group(1) + m.group(2) + m.group(3)
+    else:
+        m = re.search(r'\b(\d{10,11})\b', sec_emit)
+        telefone = m.group(1) if m else ""
+    m = re.search(r'[\w.+\-]+@[\w.\-]+\.[a-zA-Z]{2,}', sec_emit)
+    email = m.group(0).lower() if m else ""
 
-    m_cep = re.search(r'\b(\d{5}-\d{3})\b', secao_emitente)
+    # ── Endereço, UF, IBGE, CEP emitente ────────────────────────────────
+    rua = numero = complemento = bairro = ""
+    uf_emit = ibge_emit = cep_emit = ""
+    m_cep = re.search(r'\b(\d{5}-\d{3})\b', sec_emit)
     if m_cep:
-        d['cep'] = _so_digitos(m_cep.group(1))
-
-        # Prioriza linha explicitamente associada ao rótulo Endereço.
-        m_linha_end = re.search(r'Endere[c\u00e7]o[^\n\r]*\n([^\n\r]+)', secao_emitente, re.IGNORECASE)
+        cep_emit = _so_digitos(m_cep.group(1))
+        # Prioriza linha com o rótulo Endereço logo acima do CEP
+        m_linha_end = re.search(r'Endere[çc]o[^\n\r]*\n([^\n\r]+)', sec_emit, re.IGNORECASE)
         if m_linha_end:
             linha_end = m_linha_end.group(1).strip()
-            if d['cep'] in linha_end or m_cep.group(1) in linha_end or ',' in linha_end:
-                linha_limpa = re.sub(r'\s*\d{5}-?\d{3}\s*.*$', '', linha_end).strip()
-                linha_limpa = re.sub(r'^(Endere[c\u00e7]o|Logradouro)\s*[:\-]?\s*', '', linha_limpa, flags=re.IGNORECASE).strip()
-                rua, numero, complemento, bairro = _parse_endereco_por_virgula(linha_limpa)
-                if rua and numero:
-                    d['rua'] = rua
-                    d['numero'] = numero
-                    if complemento:
-                        d['complemento'] = complemento
-                    if bairro:
-                        d['bairro'] = bairro
-
-        linhas_emit = secao_emitente.splitlines()
-        for i, linha in enumerate(linhas_emit):
-            if m_cep.group(1) in linha or d['cep'] in linha:
-                linha_limpa = re.sub(r'\s*\d{5}-?\d{3}\s*.*$', '', linha).strip()
-                linha_limpa = re.sub(r'\s+coluna\s+\w+', '', linha_limpa, flags=re.IGNORECASE).strip()
-                linha_limpa = re.sub(r'^(Endere[c\u00e7]o|Logradouro)\s*[:\-]?\s*', '', linha_limpa, flags=re.IGNORECASE).strip()
-                linha_limpa = re.sub(r'\bUF\b.*$', '', linha_limpa, flags=re.IGNORECASE).strip()
-                m_cidade = re.search(r',?\s*([A-Za-z\u00c0-\u017f]+(?:\s+[A-Za-z\u00c0-\u017f]+)*)\s*[-\u2013/]\s*([A-Z]{2})\s*$', linha_limpa)
-                if m_cidade:
-                    d['uf'] = m_cidade.group(2)
-                    d['ibge'] = _ibge_municipio(m_cidade.group(1).strip())[1]
-                    linha_limpa = linha_limpa[:m_cidade.start()].strip()
-
-                rua, numero, complemento, bairro = _parse_endereco_por_virgula(linha_limpa)
-                n = len([p for p in (linha_limpa or '').split(',') if p.strip() != ''])
-                if not d['rua']:
-                    d['rua'] = rua
-                if not d['numero']:
-                    d['numero'] = numero
-                if n >= 4:
-                    if not d['complemento']:
-                        d['complemento'] = complemento
-                    if not d['bairro']:
-                        d['bairro'] = bairro
-                elif n == 3:
-                    if not d['bairro']:
-                        d['bairro'] = bairro
-                elif n <= 2:
-                    for prox in linhas_emit[i + 1:i + 7]:
-                        prox = re.sub(r'\s+coluna\s+\w+', '', prox, flags=re.IGNORECASE).strip(' ,')
-                        if not prox:
-                            continue
-                        if re.search(r'Munic[i\u00ed]pio|UF|CEP|Telefone|E-?mail|Inscri[c\u00e7]', prox, re.IGNORECASE):
-                            continue
-                        if len(prox) <= 50 and re.search(r'[A-Za-z\u00c0-\u017f]', prox):
-                            d['bairro'] = prox
-                            break
-                break
-
-    if not d['uf']:
-        m = re.search(r'\b([A-Za-z\u00c0-\u017f]+(?:\s+[A-Za-z\u00c0-\u017f]+)*)\s*[-\u2013/]\s*([A-Z]{2})\b', secao_emitente)
+            if cep_emit in linha_end or m_cep.group(1) in linha_end or ',' in linha_end:
+                ll = re.sub(r'\s*\d{5}-?\d{3}\s*.*$', '', linha_end).strip()
+                ll = re.sub(r'^(Endere[çc]o|Logradouro)\s*[:\-]?\s*', '', ll, flags=re.IGNORECASE).strip()
+                rua, numero, complemento, bairro = _parse_endereco_por_virgula(ll)
+        # Busca linha que contenha o CEP para extrair cidade/UF
+        for linha in sec_emit.splitlines():
+            if m_cep.group(1) not in linha:
+                continue
+            ll = re.sub(r'\s*\d{5}-?\d{3}\s*.*$', '', linha).strip()
+            ll = re.sub(r'\s+coluna\s+\w+', '', ll, flags=re.IGNORECASE).strip()
+            ll = re.sub(r'^(Endere[çc]o|Logradouro)\s*[:\-]?\s*', '', ll, flags=re.IGNORECASE).strip()
+            m_cidade = re.search(r',?\s*([A-Za-zÀ-ú]+(?:\s+[A-Za-zÀ-ú]+)*)\s*[-–/]\s*([A-Z]{2})\s*$', ll)
+            if m_cidade:
+                uf_emit = m_cidade.group(2)
+                ibge_emit = _ibge_municipio(m_cidade.group(1).strip())[1]
+                ll = ll[:m_cidade.start()].strip()
+            if not rua:
+                rua, numero, complemento, bairro = _parse_endereco_por_virgula(ll)
+            break
+    if not uf_emit:
+        m = re.search(r'\b([A-Za-zÀ-ú]+(?:\s+[A-Za-zÀ-ú]+)*)\s*[-–/]\s*([A-Z]{2})\b', sec_emit)
         if m:
-            d['uf'] = m.group(2)
-            d['ibge'] = _ibge_municipio(m.group(1))[1]
+            uf_emit = m.group(2)
+            ibge_emit = _ibge_municipio(m.group(1))[1]
 
-    if not d['bairro']:
-        m = re.search(r'Bairro\s*[:\-]?\s*([^\n\r]+)', secao_emitente, re.IGNORECASE)
-        if m:
-            d['bairro'] = re.sub(r'\s+coluna\s+\w+', '', m.group(1), flags=re.IGNORECASE).strip(' ,').split(',')[0].strip()
-    if not d['bairro'] and d.get('rua') and d.get('numero'):
-        pad_end = re.compile(
-            re.escape(d['rua']) + r'\s*,\s*' + re.escape(d['numero']) + r'\s*,\s*([A-Za-z\u00c0-\u017f ]{3,40})',
-            re.IGNORECASE
-        )
-        m = pad_end.search(secao_emitente) or pad_end.search(texto)
-        if m:
-            d['bairro'] = m.group(1).strip(' ,-')
-    if not d['bairro']:
-        m = re.search(r'\b(CENTRO)\b', secao_emitente, re.IGNORECASE) or re.search(r'\b(CENTRO)\b', texto, re.IGNORECASE)
-        if m:
-            d['bairro'] = m.group(1).upper()
-    if d.get('bairro'):
-        d['bairro'] = re.sub(r'\s+coluna\s+\w+', '', d['bairro'], flags=re.IGNORECASE).strip(' ,')
-        d['bairro'] = re.sub(r'\s+UF\b.*$', '', d['bairro'], flags=re.IGNORECASE).strip(' ,-')
-        d['bairro'] = re.sub(r'\s+-\s+[A-Z]{2}$', '', d['bairro']).strip()
-    if re.search(r'optante|simples|regime|tributa', d.get('bairro', ''), re.IGNORECASE):
-        d['bairro'] = ''
-
-    if d['rua'] and not re.match(r'^(R|RUA|AV|AVENIDA|TRAVESSA|TV|ALAMEDA|PRA[\u00c7C]A|RODOVIA)\b', d['rua'], re.IGNORECASE):
-        m = re.search(r'\b(R|RUA|AV|AVENIDA|TRAVESSA|TV|ALAMEDA|PRA[\u00c7C]A|RODOVIA)\s+' + re.escape(d['rua']) + r'\b', secao_emitente, re.IGNORECASE)
-        if m:
-            d['rua'] = re.sub(r'\s+', ' ', m.group(0)).strip()
-
-    d['cod_tributacao'] = '620400001'
-
-    texto_norm = unicodedata.normalize('NFD', texto or '')
-    texto_norm = ''.join(ch for ch in texto_norm if unicodedata.category(ch) != 'Mn')
-    texto_norm = re.sub(r'\s+', ' ', texto_norm)
-
-    m = re.search(r'aliquota\s*aplicada[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto_norm, re.IGNORECASE)
+    # ── Alíquota (guardada como float %, ex.: 5.0) ───────────────────────
+    tn = unicodedata.normalize('NFD', t)
+    tn = ''.join(c for c in tn if unicodedata.category(c) != 'Mn')
+    tn = re.sub(r'\s+', ' ', tn)
+    aliquota = 2.0
+    m = re.search(r'aliquota\s*aplicada[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', tn, re.IGNORECASE)
     if not m:
-        m = re.search(r'aliquota[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto_norm, re.IGNORECASE)
+        m = re.search(r'aliquota[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', tn, re.IGNORECASE)
     if not m:
-        m = re.search(r'\b(\d{1,2}(?:[.,]\d{1,4})?)\s*%\s*(?:de\s*)?iss', texto_norm, re.IGNORECASE)
+        m = re.search(r'\b(\d{1,2}(?:[.,]\d{1,4})?)\s*%\s*(?:de\s*)?iss', tn, re.IGNORECASE)
     if not m:
-        m = re.search(r'\biss(?:qn)?[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%', texto_norm, re.IGNORECASE)
+        m = re.search(r'\biss(?:qn)?[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%', tn, re.IGNORECASE)
     if m:
         try:
-            d['aliquota_centesimos'] = str(int(round(float(m.group(1).replace(',', '.')) * 100)))
+            aliquota = float(m.group(1).replace(',', '.'))
         except Exception:
-            d['aliquota_centesimos'] = ''
-    else:
-        d['aliquota_centesimos'] = '200'
+            pass
 
-    m = re.search(r'Descri[c\u00e7][a\u00e3]o\s*do\s*Servi[c\u00e7]o\s*(?:coluna\s*\w+\s*)?([\s\S]*?)(?=TRIBUTA[\u00c7C])', texto, re.IGNORECASE)
+    # ── Descrição do serviço ─────────────────────────────────────────────
+    m = re.search(r'Descri[çc][ãa]o\s*do\s*Servi[çc]o\s*([\s\S]*?)(?=TRIBUTA[ÇC])', t, re.IGNORECASE)
     if m:
         descr = re.sub(r'\s*coluna\s+\w+', '', m.group(1), flags=re.IGNORECASE)
-        descr = re.split(r'Reten[c\u00e7][a\u00e3o]|Reten[c\u00e7][\u00f5o]es', descr, flags=re.IGNORECASE)[0]
+        descr = re.split(r'Reten[çc][ãa]o|Reten[çc][õo]es', descr, flags=re.IGNORECASE)[0]
         descr = re.sub(r'[+\-]', '', descr)
-        d['descricao'] = ' '.join(descr.split()).strip()
+        descricao = ' '.join(descr.split()).strip()
     else:
-        d['descricao'] = ''
+        descricao = ""
 
-    m = re.search(r'Local\s*da\s*Presta[c\u00e7][a\u00e3]o[\s\S]{0,120}?([A-Za-z\u00c0-\u017f\s]+?)\s*[-\u2013/]\s*([A-Z]{2})\b', texto, re.IGNORECASE)
+    # ── Local de prestação ───────────────────────────────────────────────
+    uf_local = ibge_local = ""
+    m = re.search(r'Local\s*da\s*Presta[çc][ãa]o[\s\S]{0,120}?([A-Za-zÀ-ú\s]+?)\s*[-–/]\s*([A-Z]{2})\b', t, re.IGNORECASE)
     if m:
-        d['uf_local'] = m.group(2)
-        d['ibge_local'] = _ibge_municipio(m.group(1).strip())[1]
-    else:
-        d['uf_local'] = d.get('uf', '')
-        d['ibge_local'] = d.get('ibge', '')
+        uf_local = m.group(2)
+        ibge_local = _ibge_municipio(m.group(1).strip())[1]
+    if not uf_local:
+        uf_local = uf_emit
+        ibge_local = ibge_emit
 
-    if d.get('uf') and not d.get('ibge'):
-        m = re.search(r'\b([A-Za-z\u00c0-\u017f]+(?:\s+[A-Za-z\u00c0-\u017f]+)*)\s*[-\u2013/]\s*' + re.escape(d['uf']) + r'\b', texto)
-        if m:
-            d['ibge'] = _ibge_municipio(m.group(1))[1]
-    if d.get('uf_local') and not d.get('ibge_local'):
-        m = re.search(r'\b([A-Za-z\u00c0-\u017f]+(?:\s+[A-Za-z\u00c0-\u017f]+)*)\s*[-\u2013/]\s*' + re.escape(d['uf_local']) + r'\b', texto)
-        if m:
-            d['ibge_local'] = _ibge_municipio(m.group(1))[1]
-    if not d.get('ibge') and d.get('ibge_local'):
-        d['ibge'] = d['ibge_local']
-
-    m = re.search(r'Valor\s*do\s*Servi[c\u00e7]o\s+Desconto\s*Condicionado[\s\S]{0,60}?\n\s*R\$\s*([\d.,]+)', texto, re.IGNORECASE)
+    # ── Valor do serviço (float R$) ──────────────────────────────────────
+    valor = None
+    m = re.search(r'Valor\s*do\s*Servi[çc]o\s+Desconto\s*Condicionado[\s\S]{0,60}?\n\s*R\$\s*([\d.,]+)', t, re.IGNORECASE)
     if not m:
-        m = re.search(r'Valor\s*do\s*Servi[c\u00e7]o\s+R\$\s*([\d.,]+)', texto, re.IGNORECASE)
+        m = re.search(r'Valor\s*do\s*Servi[çc]o\s+R\$\s*([\d.,]+)', t, re.IGNORECASE)
     if not m:
-        m = re.search(r'Valor\s*do\s*Servi[c\u00e7]o\D{0,10}([\d.,]+)', texto, re.IGNORECASE)
-    d['valor_centavos'] = str(_valor_centavos(m.group(1))) if m else '0'
+        m = re.search(r'Valor\s*do\s*Servi[çc]o\D{0,10}([\d.,]+)', t, re.IGNORECASE)
+    if m:
+        valor = _to_float(m.group(1))
 
-    m_fed = re.search(r'TRIBUTA[\u00c7C][\u00c3A]O\s*FEDERAL([\s\S]*?)(?:VALOR\s*TOTAL\s*DA\s*NFS|TOTAIS\s*APROXIMADOS|$)', texto, re.IGNORECASE)
-    secao_fed = m_fed.group(1) if m_fed else texto
+    # ── Tributos federais (float R$) ─────────────────────────────────────
+    m_fed = re.search(r'TRIBUTA[ÇC][ÃA]O\s*FEDERAL([\s\S]*?)(?:VALOR\s*TOTAL\s*DA\s*NFS|TOTAIS\s*APROXIMADOS|$)', t, re.IGNORECASE)
+    sec_fed = m_fed.group(1) if m_fed else t
 
-    d['irrf_centavos'] = _extrair_tributo_segmentado(secao_fed, r'\bIRRF\b', [r'\bPIS\b', r'\bC[O0]FINS\b', r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b'])
-    d['pis_centavos'] = _extrair_tributo_segmentado(secao_fed, r'\bPIS\b', [r'\bC[O0]FINS\b', r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b'])
-    d['cofins_centavos'] = _extrair_tributo_segmentado(secao_fed, r'\bC[O0]FINS\b', [r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b', r'\bPIS\b'])
-    d['csll_centavos'] = _extrair_tributo_segmentado(secao_fed, r'Contribui[cç][oõ]es\s*Sociais|\bCSLL\b', [r'\bIRRF\b', r'\bPIS\b', r'\bC[O0]FINS\b'])
+    def _trib(rotulo, proximos):
+        v = _extrair_tributo_segmentado(sec_fed, rotulo, proximos)
+        if not v or v == '0':
+            return None
+        try:
+            return int(v) / 100.0
+        except Exception:
+            return None
 
-    # Não aplica fallback cego por ordem para evitar repetir valores incorretos.
+    irrf   = _trib(r'\bIRRF\b',   [r'\bPIS\b', r'\bC[O0]FINS\b', r'Contribui[çc][oõ]es\s*Sociais', r'\bCSLL\b'])
+    pis    = _trib(r'\bPIS\b',    [r'\bC[O0]FINS\b', r'Contribui[çc][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b'])
+    cofins = _trib(r'\bC[O0]FINS\b', [r'Contribui[çc][oõ]es\s*Sociais', r'\bCSLL\b', r'\bIRRF\b', r'\bPIS\b'])
+    csll   = _trib(r'Contribui[çc][oõ]es\s*Sociais|\bCSLL\b', [r'\bIRRF\b', r'\bPIS\b', r'\bC[O0]FINS\b'])
 
-    m = re.search(r'Reten[c\u00e7][a\u00e3]o\s*do\s*ISSQN\s+(N[a\u00e3]o\s*Retido|Retido)', texto, re.IGNORECASE)
-    d['issqn_retido'] = '0' if (m and re.search(r'N[a\u00e3]o', m.group(1), re.I)) or not m else '1'
+    # ── ISSQN retido ────────────────────────────────────────────────────
+    m = re.search(r'Reten[çc][ãa]o\s*do\s*ISSQN\s+(N[ãa]o\s*Retido|Retido)', t, re.IGNORECASE)
+    issqn_retido = 0 if (m and re.search(r'N[ãa]o', m.group(1), re.I)) or not m else 1
 
-    return d
+    return {
+        # Emitente
+        'coluna_D_CNPJ':                cnpj,
+        'coluna_E_razao_social':        _lim(razao),
+        'coluna_H_UF':                  uf_emit,
+        'coluna_I_cod_ibge':            ibge_emit,
+        'coluna_J_CEP':                 cep_emit,
+        'coluna_K_rua':                 rua,
+        'coluna_L_numero':              numero,
+        'coluna_M_complemento':         complemento,
+        'coluna_N_bairro':              bairro,
+        'coluna_O_telefone':            telefone,
+        'coluna_P_email':               email,
+        # Nota
+        'coluna_R_numero_nota':         num_nota,
+        'coluna_S_serie':               serie,
+        'coluna_T_data_emissao':        data_emissao,
+        'coluna_V_mes_competencia':     mes_comp,
+        'coluna_W_ano_competencia':     ano_comp,
+        # Serviço
+        'coluna_X_cod_tributacao':      '620400001',
+        'coluna_Y_aliquota_pct':        aliquota,
+        'coluna_Z_descricao_servico':   descricao,
+        'coluna_AB_UF_prestacao':       uf_local,
+        'coluna_AC_cod_ibge_prestacao': ibge_local,
+        # Valores (float R$; montar_linha_nfs_txt converte para centavos)
+        'coluna_AG_valor_nota':         valor,
+        'coluna_AL_IRRF':               irrf,
+        'coluna_AM_PIS':                pis,
+        'coluna_AN_COFINS':             cofins,
+        'coluna_AO_csll':               csll,
+        'coluna_AR_ISSQN_retido':       issqn_retido,
+    }
 
 
 def _diagnostico_nfs_campos(dados):
     """Gera diagnóstico simples de campos-chave para facilitar depuração."""
     campos_chave = [
-        'cnpj_prestador', 'razao_social', 'uf', 'ibge', 'cep', 'rua', 'numero', 'bairro',
-        'data_emissao', 'cod_tributacao', 'aliquota_centesimos', 'descricao',
-        'uf_local', 'ibge_local', 'valor_centavos', 'irrf_centavos', 'pis_centavos',
-        'cofins_centavos', 'csll_centavos', 'numero_nota'
+        'coluna_D_CNPJ', 'coluna_E_razao_social',
+        'coluna_H_UF', 'coluna_I_cod_ibge', 'coluna_J_CEP',
+        'coluna_K_rua', 'coluna_L_numero', 'coluna_N_bairro',
+        'coluna_T_data_emissao', 'coluna_X_cod_tributacao',
+        'coluna_Y_aliquota_pct', 'coluna_Z_descricao_servico',
+        'coluna_AB_UF_prestacao', 'coluna_AC_cod_ibge_prestacao',
+        'coluna_AG_valor_nota', 'coluna_R_numero_nota',
     ]
-    faltando = [k for k in campos_chave if not str(dados.get(k, '')).strip()]
+    faltando = [k for k in campos_chave if not str(dados.get(k) or '').strip()]
     return {
         'faltando': faltando,
         'ok': len(faltando) == 0,
@@ -1855,50 +1855,69 @@ def raspar_nfs_para_json(pdf_path, arquivo_origem=''):
     }
 
 def montar_linha_nfs_txt(d):
-    """Monta a linha no formato TXT para importação no TOTVS."""
+    """Monta a linha no formato TXT para importação no TOTVS.
+
+    Aceita dict com chaves coluna_* (saída de processar_nfs_pdf).
+    Valores monetários e alíquota são float R$/% e são convertidos
+    para centavos/centésimos inteiros aqui.
+    """
+    def _s(key, default=''):
+        v = d.get(key)
+        return str(v) if v is not None else default
+
+    def _cents(key):
+        """Multiplica por 100 e arredonda; retorna '0' se ausente/None."""
+        v = d.get(key)
+        if v is None:
+            return '0'
+        try:
+            return str(int(round(float(v) * 100)))
+        except Exception:
+            return '0'
+
     campos = [
-        '2.0',                                    # 1  versão
-        '2',                                      # 2  fixo
-        '2',                                      # 3  fixo
-        d.get('cnpj_prestador', ''),              # 4  CNPJ (só dígitos)
-        d.get('razao_social', ''),                # 5  Razão Social
-        '0',                                      # 6  fixo
-        '1058',                                   # 7  fixo (cód. interno)
-        d.get('uf', ''),                          # 8  UF do prestador
-        d.get('ibge', ''),                        # 9  IBGE do prestador
-        d.get('cep', ''),                         # 10 CEP (só dígitos)
-        d.get('rua', ''),                         # 11 Logradouro
-        d.get('numero', ''),                      # 12 Número
-        d.get('complemento', ''),                 # 13 Complemento
-        d.get('bairro', ''),                      # 14 Bairro
-        d.get('telefone', ''),                    # 15 Telefone (só dígitos)
-        d.get('email', ''),                       # 16 E-mail
-        '7',                                      # 17 fixo
-        '67',                                     # 18 fixo
-        '',                                       # 19 vazio
-        d.get('data_emissao', ''),                # 20 Data emissão DD/MM/AAAA
-        d.get('serie', '1'),                      # 21 Série
-        d.get('mes', ''),                         # 22 Mês (MM)
-        d.get('ano', ''),                         # 23 Ano (AAAA)
-        d.get('cod_tributacao', '620400001'),      # 24 Cód. tributação nacional
-        d.get('aliquota_centesimos', ''),          # 25 Alíquota × 100
-        d.get('descricao', ''),                   # 26 Descrição do serviço
-        '1058',                                   # 27 fixo (local prestação)
-        d.get('uf_local', ''),                    # 28 UF local de prestação
-        d.get('ibge_local', ''),                  # 29 IBGE local de prestação
-        '2',                                      # 30 fixo
-        '',                                       # 31 vazio
-        '',                                       # 32 vazio
-        d.get('valor_centavos', '0'),             # 33 Valor serviço (centavos)
-        '', '', '', '', '',                        # 34-38 vazios
-        d.get('irrf_centavos', '0'),              # 39 IRRF (centavos)
-        d.get('pis_centavos', '0'),               # 40 PIS (centavos)
-        d.get('cofins_centavos', '0'),            # 41 COFINS (centavos)
-        d.get('csll_centavos', '0'),              # 42 CSLL (centavos)
-        '', '',                                   # 43-44 vazios
-        d.get('issqn_retido', '0'),               # 45 ISSQN retido (0=não)
-        '',                                       # 46 vazio
-        d.get('numero_nota', ''),                 # 47 Número da NFS-e
+        '2.0',                                         # 1  versão
+        '2',                                           # 2  fixo
+        '2',                                           # 3  fixo
+        _s('coluna_D_CNPJ'),                           # 4  CNPJ (só dígitos)
+        _s('coluna_E_razao_social'),                   # 5  Razão Social
+        '0',                                           # 6  fixo
+        '1058',                                        # 7  fixo (cód. interno)
+        _s('coluna_H_UF'),                             # 8  UF do prestador
+        _s('coluna_I_cod_ibge'),                       # 9  IBGE do prestador
+        _s('coluna_J_CEP'),                            # 10 CEP (só dígitos)
+        _s('coluna_K_rua'),                            # 11 Logradouro
+        _s('coluna_L_numero'),                         # 12 Número
+        _s('coluna_M_complemento'),                    # 13 Complemento
+        _s('coluna_N_bairro'),                         # 14 Bairro
+        _s('coluna_O_telefone'),                       # 15 Telefone (só dígitos)
+        _s('coluna_P_email'),                          # 16 E-mail
+        '7',                                           # 17 fixo
+        '67',                                          # 18 fixo
+        '',                                            # 19 vazio
+        _s('coluna_T_data_emissao'),                   # 20 Data emissão DD/MM/AAAA
+        _s('coluna_S_serie', '1'),                     # 21 Série
+        _s('coluna_V_mes_competencia'),                # 22 Mês (MM)
+        _s('coluna_W_ano_competencia'),                # 23 Ano (AAAA)
+        _s('coluna_X_cod_tributacao', '620400001'),    # 24 Cód. tributação nacional
+        _cents('coluna_Y_aliquota_pct'),               # 25 Alíquota × 100 (centésimos)
+        _s('coluna_Z_descricao_servico'),              # 26 Descrição do serviço
+        '1058',                                        # 27 fixo (local prestação)
+        _s('coluna_AB_UF_prestacao'),                  # 28 UF local de prestação
+        _s('coluna_AC_cod_ibge_prestacao'),            # 29 IBGE local de prestação
+        '2',                                           # 30 fixo
+        '',                                            # 31 vazio
+        '',                                            # 32 vazio
+        _cents('coluna_AG_valor_nota'),                # 33 Valor serviço (centavos)
+        '', '', '', '', '',                             # 34-38 vazios
+        _cents('coluna_AL_IRRF'),                      # 39 IRRF (centavos)
+        _cents('coluna_AM_PIS'),                       # 40 PIS (centavos)
+        _cents('coluna_AN_COFINS'),                    # 41 COFINS (centavos)
+        _cents('coluna_AO_csll'),                      # 42 CSLL (centavos)
+        '', '',                                        # 43-44 vazios
+        _s('coluna_AR_ISSQN_retido', '0'),             # 45 ISSQN retido (0=não)
+        '',                                            # 46 vazio
+        _s('coluna_R_numero_nota'),                    # 47 Número da NFS-e
     ]
     return ';'.join(campos)
 
