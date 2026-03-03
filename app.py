@@ -1466,11 +1466,24 @@ def _extrair_numero_nota(texto):
         return ''
 
     def _candidatos(snippet):
-        nums = re.findall(r'\b(\d{5,9})\b', snippet or '')
+        brutos = []
+        brutos.extend(re.findall(r'\b(\d{5,9})\b', snippet or ''))
+        brutos.extend(re.findall(r'\b(\d{3}[ .-]\d{3,6})\b', snippet or ''))
+        nums = []
+        for b in brutos:
+            n = re.sub(r'\D', '', b)
+            if 5 <= len(n) <= 9:
+                nums.append(n)
         # Evita anos e números improváveis
         return [n for n in nums if n not in ('2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027')]
 
     cand = []
+
+    # Tentativa mais forte: trecho entre "Número da NFS-e" e "Série da DPS"
+    m_bloco = re.search(r'N[uú]mero\s*da\s*NFS-e([\s\S]{0,180}?)S[eé]rie\s*da\s*DPS', texto, re.IGNORECASE)
+    if m_bloco:
+        for n in _candidatos(m_bloco.group(1)):
+            cand.append((n, texto.find(m_bloco.group(0))))
 
     # Tentativas diretas próximas ao rótulo
     for m in re.finditer(r'N[uú]mero\s*da\s*NFS-e', texto, re.IGNORECASE):
@@ -1723,13 +1736,17 @@ def processar_nfs_pdf(pdf_path):
 
     d['cod_tributacao'] = '620400001'
 
-    m = re.search(r'Al[i\u00ed]quota\s*Aplicada[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto, re.IGNORECASE)
+    texto_norm = unicodedata.normalize('NFD', texto or '')
+    texto_norm = ''.join(ch for ch in texto_norm if unicodedata.category(ch) != 'Mn')
+    texto_norm = re.sub(r'\s+', ' ', texto_norm)
+
+    m = re.search(r'aliquota\s*aplicada[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto_norm, re.IGNORECASE)
     if not m:
-        m = re.search(r'Al[i\u00ed]quota[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto, re.IGNORECASE)
+        m = re.search(r'aliquota[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto_norm, re.IGNORECASE)
     if not m:
-        m = re.search(r'\b(\d{1,2}(?:[.,]\d{1,4})?)\s*%\s*(?:de\s*)?ISS', texto, re.IGNORECASE)
+        m = re.search(r'\b(\d{1,2}(?:[.,]\d{1,4})?)\s*%\s*(?:de\s*)?iss', texto_norm, re.IGNORECASE)
     if not m:
-        m = re.search(r'\bISS(?:QN)?[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%', texto, re.IGNORECASE)
+        m = re.search(r'\biss(?:qn)?[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%', texto_norm, re.IGNORECASE)
     if m:
         try:
             d['aliquota_centesimos'] = str(int(round(float(m.group(1).replace(',', '.')) * 100)))
@@ -1781,17 +1798,7 @@ def processar_nfs_pdf(pdf_path):
     d['cofins_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bC[O0]FINS\b'])
     d['csll_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b'])
 
-    # Fallback por ordem (IRRF, PIS, COFINS, Contribuições) quando OCR quebra rótulos.
-    valores_fed = re.findall(r'R?\$?\s*([\d.]+,\d{2}|[\d]+\.\d{2})', secao_fed or '')
-    if len(valores_fed) >= 4:
-        if d['irrf_centavos'] == '0':
-            d['irrf_centavos'] = str(_valor_centavos(valores_fed[0]))
-        if d['pis_centavos'] == '0':
-            d['pis_centavos'] = str(_valor_centavos(valores_fed[1]))
-        if d['cofins_centavos'] == '0':
-            d['cofins_centavos'] = str(_valor_centavos(valores_fed[2]))
-        if d['csll_centavos'] == '0':
-            d['csll_centavos'] = str(_valor_centavos(valores_fed[3]))
+    # Não aplica fallback cego por ordem para evitar repetir valores incorretos.
 
     m = re.search(r'Reten[c\u00e7][a\u00e3]o\s*do\s*ISSQN\s+(N[a\u00e3]o\s*Retido|Retido)', texto, re.IGNORECASE)
     d['issqn_retido'] = '0' if (m and re.search(r'N[a\u00e3]o', m.group(1), re.I)) or not m else '1'
