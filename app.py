@@ -1460,6 +1460,45 @@ def _extrair_tributo_por_linha(texto, rotulos):
     return '0'
 
 
+def _extrair_numero_nota(texto):
+    """Extrai número da NFS-e com heurísticas para evitar pegar códigos indevidos."""
+    if not texto:
+        return ''
+
+    def _candidatos(snippet):
+        nums = re.findall(r'\b(\d{5,9})\b', snippet or '')
+        # Evita anos e números improváveis
+        return [n for n in nums if n not in ('2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027')]
+
+    cand = []
+
+    # Tentativas diretas próximas ao rótulo
+    for m in re.finditer(r'N[uú]mero\s*da\s*NFS-e', texto, re.IGNORECASE):
+        snip = texto[m.end():m.end() + 120]
+        for n in _candidatos(snip):
+            cand.append((n, m.start()))
+
+    # Padrão "NFS-e nº 123456"
+    for m in re.finditer(r'NFS-e\s*(?:n[º°o]\s*)?(\d{5,9})\b', texto, re.IGNORECASE):
+        cand.append((m.group(1), m.start()))
+
+    # Linhas com NFS-e (evita linha de DPS)
+    for ln in texto.splitlines():
+        if not re.search(r'NFS-e', ln, re.IGNORECASE):
+            continue
+        if re.search(r'DPS', ln, re.IGNORECASE):
+            continue
+        for n in _candidatos(ln):
+            cand.append((n, texto.find(ln)))
+
+    if not cand:
+        return ''
+
+    # Prioriza maior tamanho; empate: ocorrência mais próxima do fim (normalmente campo final do cabeçalho)
+    cand.sort(key=lambda x: (len(x[0]), x[1]))
+    return cand[-1][0]
+
+
 def _chars_para_texto(chars):
     """Converte lista de caracteres posicionados em texto, inserindo espaços pelo gap."""
     if not chars:
@@ -1512,19 +1551,7 @@ def processar_nfs_pdf(pdf_path):
     texto = _extrair_texto_nfs(pdf_path)
     d = {}
 
-    m = re.search(r'N[u\u00fa]mero\s*da\s*NFS-e[^\d]{0,30}(\d{5,12})\b', texto, re.IGNORECASE)
-    if not m:
-        m = re.search(r'NFS-e\s*(?:[Nn][\u00b0\u00bao])?[^\d]{0,20}(\d{5,12})\b', texto)
-    if m:
-        d['numero_nota'] = m.group(1)
-    else:
-        d['numero_nota'] = ''
-        for ln in texto.splitlines():
-            if re.search(r'NFS-e|N[u\u00fa]mero\s+da\s+NFS', ln, re.IGNORECASE):
-                nums = re.findall(r'\b(\d{5,12})\b', ln)
-                if nums:
-                    d['numero_nota'] = nums[0]
-                    break
+    d['numero_nota'] = _extrair_numero_nota(texto)
 
     m = re.search(r'S[e\u00e9]rie\s*da\s*DPS\s+(\d+)', texto, re.IGNORECASE)
     d['serie'] = m.group(1) if m else '1'
@@ -1677,6 +1704,8 @@ def processar_nfs_pdf(pdf_path):
         m = re.search(r'Al[i\u00ed]quota[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto, re.IGNORECASE)
     if not m:
         m = re.search(r'\b(\d{1,2}(?:[.,]\d{1,4})?)\s*%\s*(?:de\s*)?ISS', texto, re.IGNORECASE)
+    if not m:
+        m = re.search(r'\bISS(?:QN)?[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%', texto, re.IGNORECASE)
     if m:
         try:
             d['aliquota_centesimos'] = str(int(round(float(m.group(1).replace(',', '.')) * 100)))
@@ -1725,8 +1754,20 @@ def processar_nfs_pdf(pdf_path):
 
     d['irrf_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bIRRF\b'])
     d['pis_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bPIS\b'])
-    d['cofins_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bCOFINS\b'])
+    d['cofins_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'\bC[O0]FINS\b'])
     d['csll_centavos'] = _extrair_tributo_por_linha(secao_fed, [r'Contribui[cç][oõ]es\s*Sociais', r'\bCSLL\b'])
+
+    # Fallback por ordem (IRRF, PIS, COFINS, Contribuições) quando OCR quebra rótulos.
+    valores_fed = re.findall(r'R?\$?\s*([\d.]+,\d{2}|[\d]+\.\d{2})', secao_fed or '')
+    if len(valores_fed) >= 4:
+        if d['irrf_centavos'] == '0':
+            d['irrf_centavos'] = str(_valor_centavos(valores_fed[0]))
+        if d['pis_centavos'] == '0':
+            d['pis_centavos'] = str(_valor_centavos(valores_fed[1]))
+        if d['cofins_centavos'] == '0':
+            d['cofins_centavos'] = str(_valor_centavos(valores_fed[2]))
+        if d['csll_centavos'] == '0':
+            d['csll_centavos'] = str(_valor_centavos(valores_fed[3]))
 
     m = re.search(r'Reten[c\u00e7][a\u00e3]o\s*do\s*ISSQN\s+(N[a\u00e3]o\s*Retido|Retido)', texto, re.IGNORECASE)
     d['issqn_retido'] = '0' if (m and re.search(r'N[a\u00e3]o', m.group(1), re.I)) or not m else '1'
