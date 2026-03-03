@@ -1417,20 +1417,17 @@ def _ibge_municipio(nome_municipio):
 
 
 def _extrair_valor_por_rotulo(texto, rotulo_regex):
-    """Busca valor monetário pelo rótulo na mesma linha ou nas próximas."""
+    """Busca valor monetário logo após o rótulo."""
     if not texto:
         return '0'
 
-    linhas = [re.sub(r'\s+', ' ', ln).strip() for ln in texto.splitlines()]
-    linhas = [ln for ln in linhas if ln]
     rx_rotulo = re.compile(rotulo_regex, re.IGNORECASE)
     rx_valor = re.compile(r'R?\$?\s*([\d.]+,\d{2}|[\d]+\.\d{2})')
 
-    for i, ln in enumerate(linhas):
-        if not rx_rotulo.search(ln):
-            continue
-        janela = ' '.join(linhas[i:i + 3])
-        m_val = rx_valor.search(janela)
+    texto_norm = re.sub(r'\s+', ' ', texto)
+    for m_rot in rx_rotulo.finditer(texto_norm):
+        trecho = texto_norm[m_rot.end():m_rot.end() + 120]
+        m_val = rx_valor.search(trecho)
         if m_val:
             return str(_valor_centavos(m_val.group(1)))
     return '0'
@@ -1555,12 +1552,31 @@ def processar_nfs_pdf(pdf_path):
     m_cep = re.search(r'\b(\d{5}-\d{3})\b', secao_emitente)
     if m_cep:
         d['cep'] = _so_digitos(m_cep.group(1))
+
+        # Prioriza linha explicitamente associada ao rótulo Endereço.
+        m_linha_end = re.search(r'Endere[c\u00e7]o[^\n\r]*\n([^\n\r]+)', secao_emitente, re.IGNORECASE)
+        if m_linha_end:
+            linha_end = m_linha_end.group(1).strip()
+            if d['cep'] in linha_end or m_cep.group(1) in linha_end or ',' in linha_end:
+                linha_limpa = re.sub(r'\s*\d{5}-?\d{3}\s*.*$', '', linha_end).strip()
+                linha_limpa = re.sub(r'^(Endere[c\u00e7]o|Logradouro)\s*[:\-]?\s*', '', linha_limpa, flags=re.IGNORECASE).strip()
+                partes_end = [p.strip() for p in linha_limpa.split(',')]
+                if len(partes_end) >= 2:
+                    d['rua'] = partes_end[0]
+                    d['numero'] = partes_end[1]
+                    if len(partes_end) == 3:
+                        d['bairro'] = partes_end[2]
+                    elif len(partes_end) >= 4:
+                        d['complemento'] = partes_end[2]
+                        d['bairro'] = partes_end[3]
+
         linhas_emit = secao_emitente.splitlines()
         for i, linha in enumerate(linhas_emit):
             if m_cep.group(1) in linha or d['cep'] in linha:
                 linha_limpa = re.sub(r'\s*\d{5}-?\d{3}\s*.*$', '', linha).strip()
                 linha_limpa = re.sub(r'\s+coluna\s+\w+', '', linha_limpa, flags=re.IGNORECASE).strip()
                 linha_limpa = re.sub(r'^(Endere[c\u00e7]o|Logradouro)\s*[:\-]?\s*', '', linha_limpa, flags=re.IGNORECASE).strip()
+                linha_limpa = re.sub(r'\bUF\b.*$', '', linha_limpa, flags=re.IGNORECASE).strip()
                 m_cidade = re.search(r',?\s*([A-Za-z\u00c0-\u017f]+(?:\s+[A-Za-z\u00c0-\u017f]+)*)\s*[-\u2013/]\s*([A-Z]{2})\s*$', linha_limpa)
                 if m_cidade:
                     d['uf'] = m_cidade.group(2)
@@ -1569,13 +1585,18 @@ def processar_nfs_pdf(pdf_path):
 
                 partes_end = [p.strip() for p in linha_limpa.split(',')]
                 n = len(partes_end)
-                d['rua'] = partes_end[0] if n > 0 else ''
-                d['numero'] = partes_end[1] if n > 1 else ''
+                if not d['rua']:
+                    d['rua'] = partes_end[0] if n > 0 else ''
+                if not d['numero']:
+                    d['numero'] = partes_end[1] if n > 1 else ''
                 if n == 3:
-                    d['bairro'] = partes_end[2]
+                    if not d['bairro']:
+                        d['bairro'] = partes_end[2]
                 elif n >= 4:
-                    d['complemento'] = partes_end[2]
-                    d['bairro'] = partes_end[3]
+                    if not d['complemento']:
+                        d['complemento'] = partes_end[2]
+                    if not d['bairro']:
+                        d['bairro'] = partes_end[3]
                 elif n <= 2:
                     for prox in linhas_emit[i + 1:i + 3]:
                         prox = re.sub(r'\s+coluna\s+\w+', '', prox, flags=re.IGNORECASE).strip(' ,')
@@ -1598,6 +1619,12 @@ def processar_nfs_pdf(pdf_path):
         m = re.search(r'Bairro\s*[:\-]?\s*([^\n\r]+)', secao_emitente, re.IGNORECASE)
         if m:
             d['bairro'] = re.sub(r'\s+coluna\s+\w+', '', m.group(1), flags=re.IGNORECASE).strip(' ,').split(',')[0].strip()
+    if d.get('bairro'):
+        d['bairro'] = re.sub(r'\s+coluna\s+\w+', '', d['bairro'], flags=re.IGNORECASE).strip(' ,')
+        d['bairro'] = re.sub(r'\s+UF\b.*$', '', d['bairro'], flags=re.IGNORECASE).strip(' ,-')
+        d['bairro'] = re.sub(r'\s+-\s+[A-Z]{2}$', '', d['bairro']).strip()
+    if re.search(r'optante|simples|regime|tributa', d.get('bairro', ''), re.IGNORECASE):
+        d['bairro'] = ''
 
     if d['rua'] and not re.match(r'^(R|RUA|AV|AVENIDA|TRAVESSA|TV|ALAMEDA|PRA[\u00c7C]A|RODOVIA)\b', d['rua'], re.IGNORECASE):
         m = re.search(r'\b(R|RUA|AV|AVENIDA|TRAVESSA|TV|ALAMEDA|PRA[\u00c7C]A|RODOVIA)\s+' + re.escape(d['rua']) + r'\b', secao_emitente, re.IGNORECASE)
@@ -1609,6 +1636,8 @@ def processar_nfs_pdf(pdf_path):
     m = re.search(r'Al[i\u00ed]quota\s*Aplicada[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto, re.IGNORECASE)
     if not m:
         m = re.search(r'Al[i\u00ed]quota[^\d]{0,30}(\d{1,2}(?:[.,]\d{1,4})?)\s*%?', texto, re.IGNORECASE)
+    if not m:
+        m = re.search(r'\b(\d{1,2}(?:[.,]\d{1,4})?)\s*%\s*(?:de\s*)?ISS', texto, re.IGNORECASE)
     if m:
         try:
             d['aliquota_centesimos'] = str(int(round(float(m.group(1).replace(',', '.')) * 100)))
@@ -1620,7 +1649,7 @@ def processar_nfs_pdf(pdf_path):
     m = re.search(r'Descri[c\u00e7][a\u00e3]o\s*do\s*Servi[c\u00e7]o\s*(?:coluna\s*\w+\s*)?([\s\S]*?)(?=TRIBUTA[\u00c7C])', texto, re.IGNORECASE)
     if m:
         descr = re.sub(r'\s*coluna\s+\w+', '', m.group(1), flags=re.IGNORECASE)
-        descr = re.split(r'Reten[c\u00e7][a\u00e3o]', descr, flags=re.IGNORECASE)[0]
+        descr = re.split(r'Reten[c\u00e7][a\u00e3o]|Reten[c\u00e7][\u00f5o]es', descr, flags=re.IGNORECASE)[0]
         descr = re.sub(r'[+\-]', '', descr)
         d['descricao'] = ' '.join(descr.split()).strip()
     else:
@@ -1642,6 +1671,8 @@ def processar_nfs_pdf(pdf_path):
         m = re.search(r'\b([A-Za-z\u00c0-\u017f]+(?:\s+[A-Za-z\u00c0-\u017f]+)*)\s*[-\u2013/]\s*' + re.escape(d['uf_local']) + r'\b', texto)
         if m:
             d['ibge_local'] = _ibge_municipio(m.group(1))[1]
+    if not d.get('ibge') and d.get('ibge_local'):
+        d['ibge'] = d['ibge_local']
 
     m = re.search(r'Valor\s*do\s*Servi[c\u00e7]o\s+Desconto\s*Condicionado[\s\S]{0,60}?\n\s*R\$\s*([\d.,]+)', texto, re.IGNORECASE)
     if not m:
@@ -1656,7 +1687,7 @@ def processar_nfs_pdf(pdf_path):
     d['irrf_centavos'] = _extrair_valor_por_rotulo(secao_fed, r'\bIRRF\b')
     d['pis_centavos'] = _extrair_valor_por_rotulo(secao_fed, r'\bPIS\b')
     d['cofins_centavos'] = _extrair_valor_por_rotulo(secao_fed, r'\bCOFINS\b')
-    d['csll_centavos'] = _extrair_valor_por_rotulo(secao_fed, r'Contribui[c\u00e7][o\u00f5]es\s*Sociais|CSLL')
+    d['csll_centavos'] = _extrair_valor_por_rotulo(secao_fed, 'Contribui(?:\\u00e7\\u00f5es|coes)\\s*Sociais|CSLL')
 
     m = re.search(r'Reten[c\u00e7][a\u00e3]o\s*do\s*ISSQN\s+(N[a\u00e3]o\s*Retido|Retido)', texto, re.IGNORECASE)
     d['issqn_retido'] = '0' if (m and re.search(r'N[a\u00e3]o', m.group(1), re.I)) or not m else '1'
