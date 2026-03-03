@@ -1445,13 +1445,16 @@ def _extrair_tributo_por_linha(texto, rotulos):
 
     linhas = [re.sub(r'\s+', ' ', ln).strip() for ln in texto.splitlines() if ln.strip()]
     for i, ln in enumerate(linhas):
-        if not rx_label.search(ln):
+        m_label = rx_label.search(ln)
+        if not m_label:
             continue
-        if rx_valor.search(ln):
-            return str(_valor_centavos(rx_valor.search(ln).group(1)))
+        # Mesmo que haja vários tributos na mesma linha, pega o valor após o rótulo atual.
+        m = rx_valor.search(ln[m_label.end():])
+        if m:
+            return str(_valor_centavos(m.group(1)))
         if i + 1 < len(linhas):
             janela = f"{ln} {linhas[i+1]}"
-            m = rx_valor.search(janela)
+            m = rx_valor.search(janela[m_label.end():])
             if m:
                 return str(_valor_centavos(m.group(1)))
     return '0'
@@ -1643,6 +1646,18 @@ def processar_nfs_pdf(pdf_path):
         m = re.search(r'Bairro\s*[:\-]?\s*([^\n\r]+)', secao_emitente, re.IGNORECASE)
         if m:
             d['bairro'] = re.sub(r'\s+coluna\s+\w+', '', m.group(1), flags=re.IGNORECASE).strip(' ,').split(',')[0].strip()
+    if not d['bairro'] and d.get('rua') and d.get('numero'):
+        pad_end = re.compile(
+            re.escape(d['rua']) + r'\s*,\s*' + re.escape(d['numero']) + r'\s*,\s*([A-Za-z\u00c0-\u017f ]{3,40})',
+            re.IGNORECASE
+        )
+        m = pad_end.search(secao_emitente) or pad_end.search(texto)
+        if m:
+            d['bairro'] = m.group(1).strip(' ,-')
+    if not d['bairro']:
+        m = re.search(r'\b(CENTRO)\b', secao_emitente, re.IGNORECASE)
+        if m:
+            d['bairro'] = m.group(1).upper()
     if d.get('bairro'):
         d['bairro'] = re.sub(r'\s+coluna\s+\w+', '', d['bairro'], flags=re.IGNORECASE).strip(' ,')
         d['bairro'] = re.sub(r'\s+UF\b.*$', '', d['bairro'], flags=re.IGNORECASE).strip(' ,-')
