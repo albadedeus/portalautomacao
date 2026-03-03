@@ -481,10 +481,16 @@
             <button class="download-btn" id="btnBaixar">
               <i class="fas fa-download"></i> Baixar Arquivo TXT
             </button>
+            <button class="download-btn" id="btnBaixarJson" style="margin-top:10px;background:linear-gradient(135deg,var(--azul) 0%,var(--azul) 100%);color:var(--azulescuro)">
+              <i class="fas fa-file-code"></i> Baixar JSON da Extração
+            </button>
           </div>`;
 
         document.getElementById('btnBaixar').addEventListener('click', () => {
           baixarArquivo('/api/notas-servicos/download/' + data.arquivo, data.arquivo);
+        });
+        document.getElementById('btnBaixarJson').addEventListener('click', () => {
+          if (data.arquivo_json) baixarArquivo('/api/notas-servicos/download/' + data.arquivo_json, data.arquivo_json);
         });
 
         // Download automático

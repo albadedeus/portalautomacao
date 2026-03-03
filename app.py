@@ -1663,6 +1663,32 @@ def processar_nfs_pdf(pdf_path):
 
     return d
 
+
+def _diagnostico_nfs_campos(dados):
+    """Gera diagnóstico simples de campos-chave para facilitar depuração."""
+    campos_chave = [
+        'cnpj_prestador', 'razao_social', 'uf', 'ibge', 'cep', 'rua', 'numero', 'bairro',
+        'data_emissao', 'cod_tributacao', 'aliquota_centesimos', 'descricao',
+        'uf_local', 'ibge_local', 'valor_centavos', 'irrf_centavos', 'pis_centavos',
+        'cofins_centavos', 'csll_centavos', 'numero_nota'
+    ]
+    faltando = [k for k in campos_chave if not str(dados.get(k, '')).strip()]
+    return {
+        'faltando': faltando,
+        'ok': len(faltando) == 0,
+    }
+
+
+def raspar_nfs_para_json(pdf_path, arquivo_origem=''):
+    """Extrai dados da NFS e retorna estrutura JSON de apoio ao TXT."""
+    dados = processar_nfs_pdf(pdf_path)
+    return {
+        'arquivo': arquivo_origem or os.path.basename(pdf_path),
+        'extraido_em': datetime.now().isoformat(timespec='seconds'),
+        'campos': dados,
+        'diagnostico': _diagnostico_nfs_campos(dados),
+    }
+
 def montar_linha_nfs_txt(d):
     """Monta a linha no formato TXT para importação no TOTVS."""
     campos = [
@@ -1726,6 +1752,7 @@ def api_notas_servicos_processar():
         return jsonify({'error': 'Nenhum arquivo enviado'}), 400
 
     resultados = []
+    resultados_json = []
     linhas_txt = []
     erros = []
 
@@ -1739,11 +1766,13 @@ def api_notas_servicos_processar():
         arq.save(tmp_path)
 
         try:
-            dados = processar_nfs_pdf(tmp_path)
+            nota_json = raspar_nfs_para_json(tmp_path, arquivo_origem=arq.filename)
+            dados = nota_json['campos']
             dados['arquivo_origem'] = arq.filename
             linha = montar_linha_nfs_txt(dados)
             linhas_txt.append(linha)
             resultados.append({'arquivo': arq.filename, 'dados': dados, 'linha': linha})
+            resultados_json.append(nota_json)
         except Exception as e:
             erros.append(f'{arq.filename}: {str(e)}')
         finally:
@@ -1761,11 +1790,21 @@ def api_notas_servicos_processar():
     with open(path_txt, 'w', encoding='utf-8') as f:
         f.write('\n'.join(linhas_txt))
 
+    nome_json = f'notas_servicos_{timestamp}.json'
+    path_json = os.path.join(NOTAS_OUTPUT_FOLDER, nome_json)
+    with open(path_json, 'w', encoding='utf-8') as f:
+        json.dump({
+            'gerado_em': datetime.now().isoformat(timespec='seconds'),
+            'total_notas': len(resultados_json),
+            'notas': resultados_json,
+        }, f, ensure_ascii=False, indent=2)
+
     return jsonify({
         'success': True,
         'total': len(linhas_txt),
         'erros': erros,
         'arquivo': nome_txt,
+        'arquivo_json': nome_json,
         'resultados': resultados,
     })
 
