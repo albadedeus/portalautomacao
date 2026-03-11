@@ -2026,6 +2026,31 @@ def api_cadastro_clientes_status(job_id):
     })
 
 
+@app.route('/api/cadastro-clientes/gerar-sa1')
+@login_required
+def api_cadastro_clientes_gerar_sa1():
+    """Lê o SA1 da rede, filtra últimos 24 meses e devolve xlsx para download imediato."""
+    import io
+    import pipeline as _pl
+    try:
+        df, _, _ = _pl.carregar_sa1()
+        cols_exp = [c for c in df.columns if not c.startswith('_')]
+        buf = io.BytesIO()
+        df[cols_exp].to_excel(buf, index=False)
+        buf.seek(0)
+        nome = f'SA1_Clientes_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        return send_file(
+            buf,
+            as_attachment=True,
+            download_name=nome,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+    except FileNotFoundError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/cadastro-clientes/download/<job_id>/<tipo>')
 @login_required
 def api_cadastro_clientes_download(job_id, tipo):

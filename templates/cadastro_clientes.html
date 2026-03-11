@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Atualizacao Cadastral de Clientes | TOTVS</title>
+  <title>Atualização Cadastral de Clientes | TOTVS</title>
 
   <link rel="icon" type="image/png" href="/static/logo-hexa.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -52,10 +52,8 @@
       margin-top: 10px;
     }
 
-    .header {
-      background: var(--azulescuro);
-      border-bottom: 4px solid var(--azul);
-    }
+    /* Header */
+    .header { background: var(--azulescuro); border-bottom: 4px solid var(--azul); }
 
     .header-top {
       display: flex;
@@ -70,18 +68,14 @@
     .header-brand img { height: 36px; }
 
     .header-back {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display: flex; align-items: center; gap: 8px;
       padding: 8px 16px;
       background: transparent;
       border: 1px solid rgba(0, 219, 255, 0.4);
       border-radius: 6px;
       color: var(--azul);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
       transition: all 0.3s;
     }
     .header-back:hover { background: rgba(0, 219, 255, 0.1); }
@@ -89,216 +83,198 @@
     .header-content { padding: 25px 40px 30px; text-align: center; }
 
     h1 {
-      color: #fff;
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      color: #fff; font-size: 24px; font-weight: 700; margin-bottom: 6px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
     }
     h1 i { color: var(--laranja); font-size: 22px; }
-
     .subtitle { color: var(--azul); font-size: 14px; font-weight: 400; }
 
     .content { padding: 30px 40px 40px; }
 
-    /* Upload */
-    .upload-area {
-      border: 2px solid rgba(0, 219, 255, 0.22);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 20px;
-      background: rgba(0, 34, 51, 0.78);
-      transition: all 0.3s;
-    }
-    .upload-area:hover { border-color: var(--azul); box-shadow: 0 4px 12px rgba(0, 219, 255, 0.12); }
-
-    .upload-area label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--totvs-white);
-      font-weight: 600;
-      margin-bottom: 6px;
-      font-size: 15px;
-    }
-
-    small { color: rgba(255,255,255,0.65); font-size: 12px; display: block; margin-bottom: 12px; }
-
-    input[type="file"] {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      border: 1px solid rgba(0, 219, 255, 0.5);
-      border-radius: 8px;
-      background: rgba(0, 34, 51, 0.9);
-      color: var(--totvs-white);
-      cursor: pointer;
-      font-size: 14px;
-    }
-    input[type="file"]:hover { border-color: var(--azul); }
-
-    /* Info boxes */
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .info-box {
-      background: rgba(0, 34, 51, 0.6);
-      border: 1px solid rgba(0, 219, 255, 0.18);
-      border-radius: 10px;
-      padding: 14px 16px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.7);
-      line-height: 1.5;
-    }
-    .info-box strong { color: var(--azul); display: block; margin-bottom: 4px; font-size: 13px; }
-    .info-box i { margin-right: 5px; }
-
-    /* Botao */
-    button {
-      background: linear-gradient(135deg, var(--laranja) 0%, var(--roxo) 100%);
-      color: #fff;
-      border: none;
-      padding: 16px 40px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 10px;
-      transition: all 0.3s;
-      box-shadow: 0 4px 15px rgba(255, 137, 0, 0.3);
-      font-family: var(--font-sans);
-    }
-    button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 137, 0, 0.4); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    /* Painel de status */
-    .painel-status {
-      margin-top: 24px;
-      display: none;
+    /* Steps */
+    .step {
       border: 1px solid rgba(0, 219, 255, 0.2);
       border-radius: 12px;
       overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .step-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 22px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(0, 219, 255, 0.12);
+    }
+
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-num.laranja { background: rgba(255,137,0,0.18); color: var(--laranja); border: 1px solid rgba(255,137,0,0.4); }
+    .step-num.azul    { background: rgba(0,219,255,0.12); color: var(--azul);    border: 1px solid rgba(0,219,255,0.35); }
+
+    .step-title { color: var(--totvs-white); font-size: 15px; font-weight: 700; }
+    .step-desc  { color: rgba(255,255,255,0.55); font-size: 12px; margin-top: 2px; }
+
+    .step-body { padding: 22px; }
+
+    /* Upload area */
+    .upload-area {
+      border: 2px dashed rgba(0, 219, 255, 0.25);
+      border-radius: 10px;
+      padding: 20px 22px;
+      background: rgba(0, 34, 51, 0.6);
+      transition: all 0.3s;
+      margin-bottom: 14px;
+    }
+    .upload-area:hover { border-color: var(--azul); box-shadow: 0 4px 12px rgba(0, 219, 255, 0.1); }
+    .upload-area label {
+      display: flex; align-items: center; gap: 10px;
+      color: var(--totvs-white); font-weight: 600; margin-bottom: 6px; font-size: 14px;
+    }
+    small { color: rgba(255,255,255,0.55); font-size: 12px; display: block; margin-bottom: 10px; }
+
+    input[type="file"] {
+      display: block; width: 100%;
+      padding: 11px;
+      border: 1px solid rgba(0, 219, 255, 0.4);
+      border-radius: 8px;
+      background: rgba(0, 34, 51, 0.9);
+      color: var(--totvs-white); cursor: pointer; font-size: 13px;
+    }
+    input[type="file"]:hover { border-color: var(--azul); }
+
+    /* Botões */
+    .btn {
+      border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      width: 100%; padding: 15px 20px;
+      transition: all 0.3s; font-family: var(--font-sans);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-laranja {
+      background: linear-gradient(135deg, var(--laranja) 0%, #cc6f00 100%);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(255,137,0,0.3);
+    }
+    .btn-laranja:hover { box-shadow: 0 6px 20px rgba(255,137,0,0.45); }
+
+    .btn-azul {
+      background: linear-gradient(135deg, var(--azul) 0%, var(--roxo) 100%);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(0,219,255,0.25);
+    }
+    .btn-azul:hover { box-shadow: 0 6px 20px rgba(0,219,255,0.4); }
+
+    /* Alerta passo 1 */
+    .alerta-sa1 {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .alerta-sa1.sucesso { background: rgba(0,255,212,0.1); border: 1px solid rgba(0,255,212,0.3); color: var(--verde); }
+    .alerta-sa1.erro    { background: rgba(255,0,158,0.08); border: 1px solid rgba(255,0,158,0.3); color: var(--rosa); }
+
+    /* Painel de status */
+    .painel-status {
+      display: none;
+      border: 1px solid rgba(0, 219, 255, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 4px;
     }
     .painel-status.show { display: block; }
 
     .status-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 18px;
       background: rgba(0, 0, 0, 0.25);
-      border-bottom: 1px solid rgba(0, 219, 255, 0.15);
+      border-bottom: 1px solid rgba(0, 219, 255, 0.12);
     }
-    .status-titulo { color: var(--totvs-white); font-weight: 600; font-size: 14px; }
+    .status-titulo { color: var(--totvs-white); font-weight: 600; font-size: 13px; }
     .status-badge {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
+      padding: 3px 11px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
     }
     .badge-aguardando { background: rgba(255,137,0,0.15); color: var(--laranja); border: 1px solid rgba(255,137,0,0.3); }
-    .badge-rodando    { background: rgba(0,219,255,0.15); color: var(--azul);   border: 1px solid rgba(0,219,255,0.3); }
-    .badge-concluido  { background: rgba(0,255,212,0.15); color: var(--verde);  border: 1px solid rgba(0,255,212,0.3); }
-    .badge-erro       { background: rgba(255,0,158,0.15); color: var(--rosa);   border: 1px solid rgba(255,0,158,0.3); }
+    .badge-rodando    { background: rgba(0,219,255,0.15);  color: var(--azul);   border: 1px solid rgba(0,219,255,0.3); }
+    .badge-concluido  { background: rgba(0,255,212,0.15);  color: var(--verde);  border: 1px solid rgba(0,255,212,0.3); }
+    .badge-erro       { background: rgba(255,0,158,0.15);  color: var(--rosa);   border: 1px solid rgba(255,0,158,0.3); }
 
     /* Progresso */
-    .progresso-wrap { padding: 16px 20px; background: rgba(0,34,51,0.5); border-bottom: 1px solid rgba(0,219,255,0.1); }
-    .progresso-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: rgba(255,255,255,0.7); }
-    .progresso-bar-bg { background: rgba(255,255,255,0.08); border-radius: 20px; height: 8px; overflow: hidden; }
+    .progresso-wrap { padding: 14px 18px; background: rgba(0,34,51,0.5); border-bottom: 1px solid rgba(0,219,255,0.08); }
+    .progresso-info { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 12px; color: rgba(255,255,255,0.65); }
+    .progresso-bar-bg { background: rgba(255,255,255,0.07); border-radius: 20px; height: 7px; overflow: hidden; }
     .progresso-bar { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--laranja), var(--roxo)); transition: width 0.5s ease; }
 
     /* Log */
-    .log-wrap { padding: 0; }
     .log-title {
-      padding: 10px 20px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.5);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid rgba(0,219,255,0.08);
+      padding: 9px 18px; font-size: 11px;
+      color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(0,219,255,0.07);
     }
     .log-box {
       background: rgba(0,0,0,0.3);
-      font-family: monospace;
-      font-size: 11px;
-      color: rgba(255,255,255,0.75);
-      padding: 14px 20px;
-      max-height: 280px;
-      overflow-y: auto;
+      font-family: monospace; font-size: 11px;
+      color: rgba(255,255,255,0.72);
+      padding: 12px 18px;
+      max-height: 260px; overflow-y: auto;
       line-height: 1.6;
     }
     .log-line { white-space: pre-wrap; word-break: break-all; }
     .log-line.error { color: var(--rosa); }
     .log-line.warn  { color: var(--laranja); }
-    .log-line.info  { color: rgba(255,255,255,0.75); }
     .log-line.done  { color: var(--verde); }
 
     /* Downloads */
     .downloads-wrap {
-      padding: 20px;
-      display: flex;
-      gap: 12px;
+      padding: 16px 18px; display: flex; gap: 10px;
       background: rgba(0,34,51,0.5);
-      border-top: 1px solid rgba(0,255,212,0.2);
+      border-top: 1px solid rgba(0,255,212,0.18);
     }
-
     .download-btn {
       flex: 1;
       background: linear-gradient(135deg, var(--verde) 0%, var(--azul) 100%);
       color: var(--azulescuro);
-      border: none;
-      padding: 14px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      width: auto;
-      margin-top: 0;
-      box-shadow: 0 4px 12px rgba(0,255,212,0.25);
+      border: none; padding: 13px 16px; border-radius: 8px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      width: auto; margin-top: 0;
+      box-shadow: 0 4px 10px rgba(0,255,212,0.2);
       font-family: var(--font-sans);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
       transition: all 0.3s;
     }
-    .download-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,255,212,0.4); }
+    .download-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,212,0.38); }
     .download-btn.secondary {
       background: linear-gradient(135deg, var(--azul) 0%, var(--roxo) 100%);
-      box-shadow: 0 4px 12px rgba(0,219,255,0.2);
+      color: #fff; box-shadow: 0 4px 10px rgba(0,219,255,0.18);
     }
-    .download-btn.secondary:hover { box-shadow: 0 6px 18px rgba(0,219,255,0.4); }
+    .download-btn.secondary:hover { box-shadow: 0 6px 16px rgba(0,219,255,0.38); }
 
     /* Spinner */
     .spinner-small {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.2);
+      display: inline-block; width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,0.18);
       border-top-color: var(--azul);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-right: 6px;
-      vertical-align: middle;
+      margin-right: 5px; vertical-align: middle;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .footer {
-      text-align: center;
-      padding: 16px 20px;
+      text-align: center; padding: 14px 20px;
       background: var(--azulescuro);
-      color: rgba(255,255,255,0.5);
-      font-size: 12px;
-      border-top: 1px solid rgba(0, 219, 255, 0.15);
+      color: rgba(255,255,255,0.45); font-size: 12px;
+      border-top: 1px solid rgba(0, 219, 255, 0.12);
     }
   </style>
 </head>
@@ -315,83 +291,96 @@
         </a>
       </div>
       <div class="header-content">
-        <h1><i class="fas fa-id-card-alt"></i> Atualizacao Cadastral de Clientes</h1>
-        <p class="subtitle">Consulta CNPJ via API e confronta com o cadastro SA1 — gera relatorio de divergencias</p>
+        <h1><i class="fas fa-id-card-alt"></i> Atualização Cadastral de Clientes</h1>
+        <p class="subtitle">Consulta CNPJ via API e confronta com o cadastro SA1 — gera relatório de divergências</p>
       </div>
     </div>
 
     <div class="content">
 
-      <div class="info-grid">
-        <div class="info-box">
-          <strong><i class="fas fa-file-csv"></i> Entrada</strong>
-          SA1_Clientes.csv exportado do Protheus.<br>Clientes dos ultimos 24 meses serao consultados.
+      <!-- PASSO 1 -->
+      <div class="step">
+        <div class="step-header">
+          <div class="step-num laranja">1</div>
+          <div>
+            <div class="step-title">Gerar arquivo de clientes (últimos 24 meses)</div>
+            <div class="step-desc">Lê o SA1 da rede automaticamente e baixa o arquivo filtrado para o seu PC</div>
+          </div>
         </div>
-        <div class="info-box">
-          <strong><i class="fas fa-clock"></i> Duracao</strong>
-          Aproximadamente 10–14 segundos por CNPJ consultado.<br>CNPJs ja consultados (menos de 90 dias) sao ignorados.
-        </div>
-        <div class="info-box">
-          <strong><i class="fas fa-file-excel"></i> Saida</strong>
-          relatorio_api.xlsx com abas Resumo, Dados Completos, Confronto e Divergencias.
+        <div class="step-body">
+          <button class="btn btn-laranja" id="btnGerarSa1" type="button">
+            <i class="fas fa-download"></i> Gerar e Baixar SA1 Filtrado
+          </button>
+          <div class="alerta-sa1" id="alertaSa1"></div>
         </div>
       </div>
 
-      <form id="formIniciar" enctype="multipart/form-data">
-        <div class="upload-area">
-          <label>
-            <span style="font-size:20px">📋</span>
-            <span>Arquivo SA1_Clientes.csv</span>
-          </label>
-          <small>Exportado do Protheus. Separador ";", encoding Latin-1. Tambem aceita .xlsx (aba SA1_Clientes).</small>
-          <input type="file" name="sa1" id="sa1" accept=".csv,.xlsx" required />
-        </div>
-
-        <button type="submit" id="btnIniciar">
-          <i class="fas fa-play-circle"></i> Iniciar Consulta
-        </button>
-      </form>
-
-      <!-- Painel de status / progresso / log -->
-      <div class="painel-status" id="painelStatus">
-
-        <div class="status-header">
-          <span class="status-titulo">
-            <span class="spinner-small" id="spinner" style="display:none"></span>
-            <span id="statusTitulo">Preparando...</span>
-          </span>
-          <span class="status-badge badge-aguardando" id="statusBadge">Aguardando</span>
-        </div>
-
-        <div class="progresso-wrap" id="progressoWrap" style="display:none">
-          <div class="progresso-info">
-            <span id="progressoTexto">0 de 0 CNPJs</span>
-            <span id="progressoPct">0%</span>
-          </div>
-          <div class="progresso-bar-bg">
-            <div class="progresso-bar" id="progressoBar" style="width:0%"></div>
+      <!-- PASSO 2 -->
+      <div class="step">
+        <div class="step-header">
+          <div class="step-num azul">2</div>
+          <div>
+            <div class="step-title">Consultar CNPJs e gerar relatório de divergências</div>
+            <div class="step-desc">Envie o arquivo gerado no passo anterior (ou qualquer SA1 filtrado) para iniciar a consulta</div>
           </div>
         </div>
+        <div class="step-body">
+          <form id="formIniciar" enctype="multipart/form-data">
+            <div class="upload-area">
+              <label>
+                <span style="font-size:18px">📋</span>
+                <span>Arquivo SA1_Clientes (CSV ou XLSX)</span>
+              </label>
+              <small>Use o arquivo baixado no Passo 1. Também aceita .xlsx com aba SA1_Clientes.</small>
+              <input type="file" name="sa1" id="sa1" accept=".csv,.xlsx" required />
+            </div>
 
-        <div class="log-wrap">
-          <div class="log-title"><i class="fas fa-terminal"></i> Log de execucao</div>
-          <div class="log-box" id="logBox"></div>
+            <button type="submit" class="btn btn-azul" id="btnIniciar">
+              <i class="fas fa-play-circle"></i> Iniciar Consulta de CNPJs
+            </button>
+          </form>
+
+          <!-- Painel de status / log / downloads -->
+          <div class="painel-status" id="painelStatus">
+
+            <div class="status-header">
+              <span class="status-titulo">
+                <span class="spinner-small" id="spinner" style="display:none"></span>
+                <span id="statusTitulo">Preparando...</span>
+              </span>
+              <span class="status-badge badge-aguardando" id="statusBadge">Aguardando</span>
+            </div>
+
+            <div class="progresso-wrap" id="progressoWrap" style="display:none">
+              <div class="progresso-info">
+                <span id="progressoTexto">0 de 0 CNPJs</span>
+                <span id="progressoPct">0%</span>
+              </div>
+              <div class="progresso-bar-bg">
+                <div class="progresso-bar" id="progressoBar" style="width:0%"></div>
+              </div>
+            </div>
+
+            <div class="log-title"><i class="fas fa-terminal"></i> Log de execução</div>
+            <div class="log-box" id="logBox"></div>
+
+            <div class="downloads-wrap" id="downloadsWrap" style="display:none">
+              <button class="download-btn" id="btnRelatorio">
+                <i class="fas fa-file-excel"></i> Baixar Relatório de Divergências
+              </button>
+              <button class="download-btn secondary" id="btnClientes">
+                <i class="fas fa-table"></i> Baixar Planilha de Clientes
+              </button>
+            </div>
+
+          </div>
         </div>
-
-        <div class="downloads-wrap" id="downloadsWrap" style="display:none">
-          <button class="download-btn" id="btnRelatorio">
-            <i class="fas fa-file-excel"></i> Baixar Relatorio de Divergencias
-          </button>
-          <button class="download-btn secondary" id="btnClientes">
-            <i class="fas fa-table"></i> Baixar Planilha de Clientes
-          </button>
-        </div>
-
       </div>
+
     </div>
 
     <div class="footer">
-      Atualizacao Cadastral de Clientes | TOTVS &copy; 2025
+      Atualização Cadastral de Clientes | TOTVS &copy; 2025
     </div>
   </div>
 
@@ -400,50 +389,93 @@
     let _pollingInterval = null;
     let _lastLogCount = 0;
 
+    // ── Passo 1: Gerar SA1 ─────────────────────────────────────────
+    document.getElementById('btnGerarSa1').addEventListener('click', async function () {
+      const btn   = this;
+      const alerta = document.getElementById('alertaSa1');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-small"></span> Gerando arquivo...';
+      alerta.style.display = 'none';
+
+      try {
+        const resp = await fetch('/api/cadastro-clientes/gerar-sa1');
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ error: 'Erro desconhecido' }));
+          throw new Error(err.error || `HTTP ${resp.status}`);
+        }
+
+        // Dispara o download via blob
+        const blob = await resp.blob();
+        const cd   = resp.headers.get('Content-Disposition') || '';
+        const match = cd.match(/filename="?([^";\n]+)"?/);
+        const nome  = match ? match[1] : 'SA1_Clientes_filtrado.xlsx';
+
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href = url; a.download = nome;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+
+        alerta.className = 'alerta-sa1 sucesso';
+        alerta.innerHTML = '<i class="fas fa-check-circle"></i> Arquivo gerado e salvo. Agora envie-o no Passo 2.';
+        alerta.style.display = 'block';
+
+      } catch (err) {
+        alerta.className = 'alerta-sa1 erro';
+        alerta.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + err.message;
+        alerta.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-download"></i> Gerar e Baixar SA1 Filtrado';
+      }
+    });
+
+    // ── Passo 2: Consultar CNPJs ───────────────────────────────────
     function formatarStatus(status) {
       const map = {
-        'aguardando': ['Aguardando',  'badge-aguardando'],
-        'rodando':    ['Em execucao', 'badge-rodando'],
-        'concluido':  ['Concluido',   'badge-concluido'],
-        'erro':       ['Erro',        'badge-erro'],
+        'aguardando': ['Aguardando',      'badge-aguardando'],
+        'rodando':    ['Em execução',      'badge-rodando'],
+        'concluido':  ['Concluído',        'badge-concluido'],
+        'erro':       ['Erro',             'badge-erro'],
       };
       return map[status] || [status, 'badge-aguardando'];
     }
 
+    function classeLinha(linha) {
+      if (/ERROR|ERRO FATAL/i.test(linha)) return 'error';
+      if (/WARNING|WARN|rate limit|429/i.test(linha)) return 'warn';
+      if (/conclu|sucesso|Pipeline/i.test(linha)) return 'done';
+      return '';
+    }
+
     function atualizarUI(data) {
       const [label, cls] = formatarStatus(data.status);
-      const badge  = document.getElementById('statusBadge');
-      const titulo = document.getElementById('statusTitulo');
-      const spinner = document.getElementById('spinner');
-
-      badge.textContent = label;
-      badge.className = 'status-badge ' + cls;
+      document.getElementById('statusBadge').textContent = label;
+      document.getElementById('statusBadge').className   = 'status-badge ' + cls;
 
       const rodando = data.status === 'rodando' || data.status === 'aguardando';
-      spinner.style.display = rodando ? 'inline-block' : 'none';
-      titulo.textContent = rodando
+      document.getElementById('spinner').style.display = rodando ? 'inline-block' : 'none';
+      document.getElementById('statusTitulo').textContent = rodando
         ? (data.status === 'aguardando' ? 'Aguardando disponibilidade...' : 'Consultando CNPJs via API...')
-        : (data.status === 'concluido' ? 'Pipeline concluido com sucesso!' : 'Erro durante execucao');
+        : (data.status === 'concluido'  ? 'Pipeline concluído com sucesso!' : 'Erro durante a execução');
 
-      // Progresso
-      const prog = data.progresso || {};
+      const prog  = data.progresso || {};
       const atual = prog.atual || 0;
       const total = prog.total || 0;
-
       if (total > 0) {
         document.getElementById('progressoWrap').style.display = 'block';
         const pct = Math.round((atual / total) * 100);
         document.getElementById('progressoTexto').textContent = `${atual} de ${total} CNPJs`;
-        document.getElementById('progressoPct').textContent = `${pct}%`;
-        document.getElementById('progressoBar').style.width = pct + '%';
+        document.getElementById('progressoPct').textContent   = `${pct}%`;
+        document.getElementById('progressoBar').style.width   = pct + '%';
       }
 
-      // Log — adiciona apenas linhas novas
       const logBox = document.getElementById('logBox');
       const linhas = data.logs || [];
       if (linhas.length > _lastLogCount) {
-        const novas = linhas.slice(_lastLogCount);
-        novas.forEach(linha => {
+        linhas.slice(_lastLogCount).forEach(linha => {
           const div = document.createElement('div');
           div.className = 'log-line ' + classeLinha(linha);
           div.textContent = linha;
@@ -453,12 +485,8 @@
         _lastLogCount = linhas.length;
       }
 
-      // Downloads
-      if (data.tem_relatorio) {
-        document.getElementById('downloadsWrap').style.display = 'flex';
-      }
+      if (data.tem_relatorio) document.getElementById('downloadsWrap').style.display = 'flex';
 
-      // Para o polling quando terminar
       if (data.status === 'concluido' || data.status === 'erro') {
         clearInterval(_pollingInterval);
         _pollingInterval = null;
@@ -466,55 +494,35 @@
       }
     }
 
-    function classeLinha(linha) {
-      if (/ERROR|ERRO FATAL/i.test(linha)) return 'error';
-      if (/WARNING|WARN|rate limit|429/i.test(linha)) return 'warn';
-      if (/concluido|sucesso|Pipeline/i.test(linha)) return 'done';
-      return 'info';
-    }
-
     async function pollStatus() {
       if (!_jobId) return;
       try {
         const resp = await fetch('/api/cadastro-clientes/status/' + _jobId);
-        if (!resp.ok) return;
-        const data = await resp.json();
-        atualizarUI(data);
-      } catch (e) {
-        console.error('Erro no polling:', e);
-      }
+        if (resp.ok) atualizarUI(await resp.json());
+      } catch (e) { /* ignora erros de rede */ }
     }
 
-    document.getElementById('formIniciar').addEventListener('submit', async function(e) {
+    document.getElementById('formIniciar').addEventListener('submit', async function (e) {
       e.preventDefault();
-
-      const formData = new FormData(this);
       const btn = document.getElementById('btnIniciar');
       btn.disabled = true;
 
-      // Reseta estado
-      _jobId = null;
-      _lastLogCount = 0;
+      _jobId = null; _lastLogCount = 0;
       document.getElementById('logBox').innerHTML = '';
-      document.getElementById('progressoWrap').style.display = 'none';
-      document.getElementById('downloadsWrap').style.display = 'none';
-      document.getElementById('progressoBar').style.width = '0%';
+      document.getElementById('progressoWrap').style.display  = 'none';
+      document.getElementById('downloadsWrap').style.display  = 'none';
+      document.getElementById('progressoBar').style.width     = '0%';
       document.getElementById('painelStatus').classList.add('show');
 
       try {
         const resp = await fetch('/api/cadastro-clientes/iniciar', {
           method: 'POST',
-          body: formData,
+          body: new FormData(this),
         });
         const data = await resp.json();
-
-        if (!resp.ok || !data.job_id) {
-          throw new Error(data.error || 'Erro ao iniciar job');
-        }
+        if (!resp.ok || !data.job_id) throw new Error(data.error || 'Erro ao iniciar job');
 
         _jobId = data.job_id;
-
-        // Polling a cada 3 segundos
         await pollStatus();
         _pollingInterval = setInterval(pollStatus, 3000);
 
@@ -525,10 +533,8 @@
     });
 
     function baixar(tipo) {
-      if (!_jobId) return;
-      window.location.href = '/api/cadastro-clientes/download/' + _jobId + '/' + tipo;
+      if (_jobId) window.location.href = '/api/cadastro-clientes/download/' + _jobId + '/' + tipo;
     }
-
     document.getElementById('btnRelatorio').addEventListener('click', () => baixar('relatorio'));
     document.getElementById('btnClientes').addEventListener('click',  () => baixar('clientes'));
   </script>
