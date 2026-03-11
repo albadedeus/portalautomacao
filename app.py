@@ -63,6 +63,21 @@ try:
 except ImportError:
     processar_conciliacao_cliente = None
 
+# Import do motor de atualização cadastral de clientes (CNPJ)
+try:
+    from cadastro_clientes_portal import (
+        iniciar_job as cnpj_iniciar_job,
+        get_job_status as cnpj_get_status,
+        listar_jobs as cnpj_listar_jobs,
+    )
+except ImportError:
+    cnpj_iniciar_job = None
+    cnpj_get_status  = None
+    cnpj_listar_jobs = None
+
+CNPJ_OUTPUT_FOLDER = 'output_cnpj'
+os.makedirs(CNPJ_OUTPUT_FOLDER, exist_ok=True)
+
 def hash_password(password):
     """Hash simples para senhas"""
     return hashlib.sha256(password.encode()).hexdigest()
@@ -1960,6 +1975,75 @@ def api_notas_servicos_download(filename):
         return send_file(filepath, as_attachment=True)
     except Exception as e:
         return jsonify({'error': str(e)}), 404
+
+
+# ==================================================================================
+# ATUALIZAÇÃO CADASTRAL DE CLIENTES (CNPJ)
+# ==================================================================================
+
+@app.route('/cadastro-clientes')
+@login_required
+def cadastro_clientes():
+    return render_template('cadastro_clientes.html', user=session.get('user'))
+
+
+@app.route('/api/cadastro-clientes/iniciar', methods=['POST'])
+@login_required
+def api_cadastro_clientes_iniciar():
+    if cnpj_iniciar_job is None:
+        return jsonify({'error': 'Modulo de cadastro nao disponivel'}), 500
+
+    arquivo = request.files.get('sa1')
+    if not arquivo or not arquivo.filename:
+        return jsonify({'error': 'Nenhum arquivo enviado'}), 400
+
+    nome = secure_filename(arquivo.filename)
+    if not nome.lower().endswith(('.csv', '.xlsx')):
+        return jsonify({'error': 'Formato invalido. Envie SA1_Clientes.csv ou .xlsx'}), 400
+
+    job_id = cnpj_iniciar_job(
+        sa1_bytes=arquivo.read(),
+        sa1_filename=nome,
+        output_base=CNPJ_OUTPUT_FOLDER,
+    )
+    return jsonify({'job_id': job_id})
+
+
+@app.route('/api/cadastro-clientes/status/<job_id>')
+@login_required
+def api_cadastro_clientes_status(job_id):
+    if cnpj_get_status is None:
+        return jsonify({'error': 'Modulo nao disponivel'}), 500
+    job = cnpj_get_status(job_id)
+    if job is None:
+        return jsonify({'error': 'Job nao encontrado'}), 404
+    return jsonify({
+        'status':    job['status'],
+        'progresso': job['progresso'],
+        'logs':      job['logs'][-100:],   # ultimas 100 linhas
+        'tem_relatorio': job['arquivo_relatorio'] is not None,
+        'tem_clientes':  job['arquivo_clientes']  is not None,
+    })
+
+
+@app.route('/api/cadastro-clientes/download/<job_id>/<tipo>')
+@login_required
+def api_cadastro_clientes_download(job_id, tipo):
+    if cnpj_get_status is None:
+        return jsonify({'error': 'Modulo nao disponivel'}), 500
+    job = cnpj_get_status(job_id)
+    if job is None:
+        return jsonify({'error': 'Job nao encontrado'}), 404
+
+    mapa = {
+        'relatorio': job.get('arquivo_relatorio'),
+        'clientes':  job.get('arquivo_clientes'),
+    }
+    path = mapa.get(tipo)
+    if not path or not os.path.exists(path):
+        return jsonify({'error': 'Arquivo nao disponivel'}), 404
+
+    return send_file(path, as_attachment=True)
 
 
 if __name__ == '__main__':
