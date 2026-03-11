@@ -1,404 +1,573 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | Portal de Automa&ccedil;&otilde;es</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Portal de Automações — Entrar</title>
   <link rel="icon" type="image/png" href="/static/logo-hexa.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     @font-face {
-      font-family: 'TOTVS-Bold';
+      font-family: 'TOTVS Bold';
       src: url('/assets/fonts/TOTVS-Bold.ttf') format('truetype');
-      font-weight: 700;
-      font-style: normal;
       font-display: swap;
     }
 
     :root {
-      --font-sans: 'TOTVS-Bold', sans-serif;
-      --color-blue-light: #00DBFF;
-      --color-blue-dark: #002233;
-      --color-purple: #A44DFF;
-      --color-green: #00FFD4;
-      --color-lime: #D9FF65;
-      --color-orange: #FF8900;
-      --color-pink: #FF009E;
-      --totvs-white: #ffffff;
-      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      --totvs-dark:    #002233;
+      --totvs-blue:    #00DBFF;
+      --totvs-purple:  #A44DFF;
+      --totvs-green:   #00FFD4;
+      --totvs-lime:    #D9FF65;
+      --totvs-orange:  #FF8900;
+      --totvs-pink:    #FF009E;
+      --totvs-white:   #FFFFFF;
+      --totvs-border:  rgba(255,255,255,0.08);
+      --totvs-err-glow: rgba(255,0,158,0.3);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
 
     body {
-      font-family: var(--font-sans);
-      background: var(--color-blue-dark);
-      min-height: 100vh;
+      background: var(--totvs-dark);
+      color: var(--totvs-white);
+      font-family: 'TOTVS Bold', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      position: relative;
-      overflow: hidden;
+      flex-direction: column;
     }
 
-    .bg-glow-1,
-    .bg-glow-2 {
-      position: absolute;
-      border-radius: 50%;
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background:
+        radial-gradient(ellipse 600px 400px at 20% 50%, rgba(0,219,255,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 300px at 80% 20%, rgba(255,137,0,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 800px 600px at 60% 80%, rgba(164,77,255,0.04) 0%, transparent 70%);
       pointer-events: none;
       z-index: 0;
     }
 
-    .bg-glow-1 {
-      width: 520px;
-      height: 520px;
-      background: var(--color-blue-light);
-      filter: blur(170px);
-      opacity: 0.09;
-      top: -180px;
-      right: -220px;
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      z-index: 10;
     }
 
-    .bg-glow-2 {
-      width: 420px;
-      height: 420px;
-      background: var(--color-purple);
-      filter: blur(180px);
-      opacity: 0.1;
-      bottom: -170px;
-      left: -170px;
-    }
-
+    /* ── CARD ── */
     .login-card {
       width: 100%;
-      max-width: 620px;
+      max-width: 460px;
+      background: var(--totvs-dark);
+      border: 1px solid var(--totvs-border);
       border-radius: 24px;
-      background: linear-gradient(180deg, rgba(0,34,51,0.98), rgba(0,34,51,0.95));
-      border: 1px solid rgba(0, 219, 255, 0.15);
-      box-shadow: 0 30px 70px rgba(0,0,0,0.55);
-      padding: 2rem 1.8rem 1.8rem;
-      position: relative;
-      z-index: 1;
+      padding: 3rem;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+      animation: slideIn 0.5s cubic-bezier(0.4,0,0.2,1);
     }
 
-    .login-header { margin-bottom: 2rem; }
+    .login-card.shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
 
-    .brand {
+    .login-card.locked {
+      border-color: var(--totvs-pink);
+      box-shadow: 0 25px 60px rgba(255,0,158,0.2);
+    }
+
+    /* Brand */
+    .login-brand {
       display: flex;
+      align-items: center;
       justify-content: center;
-      margin-bottom: 1.6rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--totvs-border);
     }
 
-    .brand img {
-      max-width: 100%;
-      height: 56px;
-      object-fit: contain;
+    .login-brand img {
+      height: 48px;
+      width: auto;
     }
 
-    .brand-separator {
-      height: 1px;
-      width: 100%;
-      background: rgba(0, 219, 255, 0.2);
-      margin-bottom: 2rem;
+    /* Icon box */
+    .icon-box {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--totvs-blue), #009bbf);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.5rem;
+      box-shadow: 0 8px 32px rgba(0,219,255,0.3);
     }
+
+    .icon-box i { font-size: 28px; color: var(--totvs-dark); }
 
     .login-title {
-      color: var(--totvs-white);
       text-align: center;
-      font-size: 1.55rem;
+      font-size: 1.6rem;
       font-weight: 800;
-      margin-bottom: 0.55rem;
+      color: var(--totvs-white);
+      margin-bottom: 0.5rem;
     }
 
     .login-subtitle {
-      color: rgba(255,255,255,0.88);
       text-align: center;
-      font-size: 1rem;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
     }
 
-    .message {
-      border-radius: 12px;
-      padding: 1rem 1.2rem;
-      font-size: 0.95rem;
-      display: none;
-      align-items: center;
-      gap: 0.7rem;
-      margin-bottom: 1.4rem;
-    }
+    /* ── FIELDS ── */
+    .field-group { margin-bottom: 1.25rem; }
 
-    .message.show { display: flex; }
-
-    .message.error {
-      background: rgba(255,0,158,0.08);
-      border: 1px solid rgba(255,0,158,0.2);
-      color: var(--color-pink);
-    }
-
-    .message.success {
-      background: rgba(0,255,212,0.08);
-      border: 1px solid rgba(0,255,212,0.2);
-      color: var(--color-green);
-    }
-
-    .login-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.3rem;
-    }
-
-    .form-group label {
+    .field-label {
       display: block;
+      font-weight: 600;
       color: var(--totvs-white);
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 0.6rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
     }
 
-    .input-wrapper {
+    .field-input-wrap {
       position: relative;
       display: flex;
       align-items: center;
     }
 
-    .input-icon {
+    .field-icon {
       position: absolute;
       left: 1rem;
-      color: var(--totvs-white);
+      color: rgba(255,255,255,0.6);
       font-size: 1rem;
-      opacity: 0.95;
       pointer-events: none;
+      z-index: 2;
     }
 
-    .form-group input {
+    input[type="text"],
+    input[type="password"] {
       width: 100%;
-      height: 52px;
-      border-radius: 12px;
-      border: 1px solid rgba(0, 219, 255, 0.22);
-      background: rgba(0, 34, 51, 0.75);
+      appearance: none;
+      background: rgba(0,34,51,0.8);
+      border: 1px solid rgba(0,219,255,0.2);
       color: var(--totvs-white);
-      font-family: inherit;
+      padding: 1rem 1rem 1rem 3rem;
+      border-radius: 14px;
       font-size: 0.95rem;
-      padding: 0 1rem 0 3rem;
-      transition: var(--transition);
+      font-family: 'TOTVS Bold', sans-serif;
+      transition: all 0.3s ease;
     }
 
-    .form-group input::placeholder { color: rgba(255,255,255,0.58); }
+    input::placeholder { color: rgba(255,255,255,0.45); font-weight: 400; }
 
-    .form-group input:focus {
+    input:focus {
       outline: none;
-      border-color: var(--color-blue-light);
-      box-shadow: 0 0 0 3px rgba(0, 219, 255, 0.18);
-      background: rgba(0, 34, 51, 0.9);
+      border-color: var(--totvs-blue);
+      background: rgba(0,34,51,0.95);
+      box-shadow: 0 0 0 3px rgba(0,219,255,0.15);
+    }
+
+    input.error {
+      border-color: var(--totvs-pink);
+      background: rgba(255,0,158,0.05);
     }
 
     .toggle-password {
       position: absolute;
-      right: 1rem;
+      right: 14px;
       background: none;
       border: none;
-      color: rgba(255,255,255,0.72);
+      color: rgba(255,255,255,0.55);
       cursor: pointer;
-      padding: 0.25rem;
-      transition: var(--transition);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+      font-size: 1rem;
     }
 
-    .toggle-password:hover { color: var(--color-blue-light); }
+    .toggle-password:hover { color: var(--totvs-white); }
 
+    /* ── BUTTON ── */
     .btn-login {
-      margin-top: 0.5rem;
       width: 100%;
-      height: 52px;
-      border-radius: 12px;
+      background: linear-gradient(135deg, var(--totvs-blue), #009bbf);
+      color: var(--totvs-dark);
       border: none;
-      background: var(--color-blue-light);
-      color: var(--color-blue-dark);
-      font-family: inherit;
+      padding: 1rem;
+      border-radius: 14px;
+      cursor: pointer;
+      font-family: 'TOTVS Bold', sans-serif;
+      font-weight: 700;
       font-size: 1rem;
-      font-weight: 800;
+      letter-spacing: 0.3px;
+      margin-top: 0.5rem;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 4px 20px rgba(0,219,255,0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.65rem;
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: 0 14px 30px rgba(0, 219, 255, 0.25);
+      gap: 10px;
     }
 
-    .btn-login:hover {
+    .btn-login:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 18px 34px rgba(0, 219, 255, 0.3);
+      box-shadow: 0 8px 30px rgba(0,219,255,0.4);
     }
 
-    .btn-login:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
+    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── MESSAGES ── */
+    .hr {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--totvs-border), transparent);
+      margin: 1.25rem 0 1rem;
     }
 
-    .login-footer {
+    .help {
       text-align: center;
-      margin-top: 1.6rem;
-    }
-
-    .login-footer a {
-      color: rgba(255,255,255,0.78);
-      text-decoration: none;
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: 600;
+      min-height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 12px;
+      padding: 10px;
+      transition: all 0.3s ease;
     }
 
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid transparent;
-      border-top-color: currentColor;
+    .help.error {
+      background: rgba(255,0,158,0.1);
+      border: 1px solid rgba(255,0,158,0.3);
+      color: var(--totvs-pink);
+      animation: slideIn 0.3s ease;
+    }
+
+    .help.success {
+      background: rgba(0,255,212,0.1);
+      border: 1px solid rgba(0,255,212,0.3);
+      color: var(--totvs-green);
+      animation: slideIn 0.3s ease;
+    }
+
+    .help.warning {
+      background: rgba(255,137,0,0.1);
+      border: 1px solid rgba(255,137,0,0.3);
+      color: var(--totvs-orange);
+      animation: slideIn 0.3s ease;
+    }
+
+    .help.info {
+      background: rgba(0,219,255,0.1);
+      border: 1px solid rgba(0,219,255,0.3);
+      color: var(--totvs-blue);
+    }
+
+    .help.locked {
+      background: rgba(255,0,158,0.15);
+      border: 2px solid var(--totvs-pink);
+      color: #fff;
+      font-size: 13px;
+      padding: 15px;
+      flex-direction: column;
+      animation: slideIn 0.3s ease;
+    }
+
+    .countdown {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--totvs-pink);
+      margin: 6px 0;
+      text-shadow: 0 0 20px var(--totvs-err-glow);
+      animation: pulse 1s ease infinite;
+    }
+
+    /* Attempt dots */
+    .attempt-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px;
+      background: rgba(255,0,158,0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(255,0,158,0.2);
+    }
+
+    .attempt-dot {
+      width: 12px; height: 12px;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      background: rgba(255,255,255,0.15);
+      transition: all 0.3s ease;
+    }
+
+    .attempt-dot.used {
+      background: var(--totvs-pink);
+      box-shadow: 0 0 10px var(--totvs-err-glow);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      10%,30%,50%,70%,90% { transform: translateX(-10px); }
+      20%,40%,60%,80%     { transform: translateX(10px); }
+    }
+
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(1.05); }
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    @media (max-width: 768px) {
-      body { padding: 1rem; }
-      .login-card { padding: 1.4rem 1rem; border-radius: 16px; }
-      .brand img { height: 42px; }
-      .brand-separator { margin-bottom: 1.5rem; }
-      .login-title { font-size: 1.35rem; }
-      .login-subtitle { font-size: 0.9rem; }
-      .form-group input { height: 48px; border-radius: 10px; }
-      .btn-login { height: 48px; border-radius: 10px; font-size: 0.95rem; }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(0,34,51,0.3);
+      border-top-color: var(--totvs-dark);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @media (max-width: 560px) {
+      .login-card { padding: 2rem 1.5rem; border-radius: 20px; }
+      .login-title { font-size: 1.3rem; }
+      .login-brand img { height: 40px; }
+      .icon-box { width: 52px; height: 52px; }
+      .icon-box i { font-size: 22px; }
     }
   </style>
 </head>
-
 <body>
-  <div class="bg-glow-1"></div>
-  <div class="bg-glow-2"></div>
+  <div class="main">
+    <div class="login-card" id="loginCard">
 
-  <div class="login-card">
-    <div class="login-header">
-      <div class="brand">
-        <img src="/assets/img/TOTVS%20Nordeste%20-%20Logo%20-%20Branco.png" alt="TOTVS Nordeste" onerror="this.onerror=null;this.src='/static/logo-totvs-branco.png';">
+      <div class="login-brand">
+        <img src="/assets/img/TOTVS%20Nordeste%20-%20Logo%20-%20Branco.png" alt="TOTVS Nordeste"
+             onerror="this.onerror=null;this.src='/static/logo-hexa.png'">
       </div>
-      <div class="brand-separator"></div>
-      <div class="login-title">Portal de Automa&ccedil;&otilde;es</div>
-      <div class="login-subtitle">Fa&ccedil;a login para acessar</div>
-    </div>
 
-    <div class="message" id="messageBox">
-      <i class="fas fa-exclamation-circle" id="messageIcon"></i>
-      <span id="messageText">Erro</span>
-    </div>
+      <div class="icon-box">
+        <i class="fas fa-bolt"></i>
+      </div>
 
-    <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
-      <div class="form-group">
-        <label for="username">Usu&aacute;rio</label>
-        <div class="input-wrapper">
-          <i class="fas fa-user input-icon"></i>
-          <input type="text" id="username" placeholder="Digite seu usu&aacute;rio" required>
+      <div class="login-title">Portal de Automações</div>
+      <div class="login-subtitle">Faça login para acessar</div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="field-group">
+          <label class="field-label">Usuário</label>
+          <div class="field-input-wrap">
+            <i class="fas fa-user field-icon"></i>
+            <input id="username" type="text" placeholder="Digite seu usuário" autocomplete="username">
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="password">Senha</label>
-        <div class="input-wrapper">
-          <i class="fas fa-lock input-icon"></i>
-          <input type="password" id="password" placeholder="Digite sua senha" required>
-          <button type="button" class="toggle-password" onclick="togglePassword()">
-            <i class="fas fa-eye" id="toggleIcon"></i>
-          </button>
+        <div class="field-group">
+          <label class="field-label">Senha</label>
+          <div class="field-input-wrap">
+            <i class="fas fa-lock field-icon"></i>
+            <input id="password" type="password" placeholder="Digite sua senha" autocomplete="current-password">
+            <button type="button" class="toggle-password" id="togglePass">
+              <i class="fas fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
         </div>
+
+        <button type="submit" class="btn-login" id="btnLogin">
+          <span id="btnText">Entrar</span>
+          <i class="fas fa-arrow-right" id="btnIcon"></i>
+        </button>
+      </form>
+
+      <div id="attemptIndicator" class="attempt-indicator" style="display:none">
+        <div class="attempt-dot" id="dot1"></div>
+        <div class="attempt-dot" id="dot2"></div>
+        <div class="attempt-dot" id="dot3"></div>
       </div>
 
-      <button type="submit" class="btn-login" id="btnLogin">
-        <span id="btnText">Entrar</span>
-        <i class="fas fa-arrow-right" id="btnIcon"></i>
-      </button>
-    </form>
+      <div class="hr"></div>
+      <div id="msg" class="help"></div>
+    </div>
   </div>
 
   <script>
-    function togglePassword() {
-      const passwordInput = document.getElementById('password');
-      const toggleIcon = document.getElementById('toggleIcon');
+    const MAX_ATTEMPTS  = 3;
+    const LOCKOUT_TIME  = 60;
 
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-      } else {
-        passwordInput.type = 'password';
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
+    let failedAttempts    = 0;
+    let isLocked          = false;
+    let countdownInterval = null;
+
+    const loginCard  = document.getElementById('loginCard');
+    const btnLogin   = document.getElementById('btnLogin');
+    const btnText    = document.getElementById('btnText');
+    const btnIcon    = document.getElementById('btnIcon');
+    const inputUser  = document.getElementById('username');
+    const inputPass  = document.getElementById('password');
+    const msg        = document.getElementById('msg');
+    const attemptEl  = document.getElementById('attemptIndicator');
+
+    // Toggle senha
+    document.getElementById('togglePass').addEventListener('click', () => {
+      const isPass = inputPass.type === 'password';
+      inputPass.type = isPass ? 'text' : 'password';
+      document.getElementById('eyeIcon').className = isPass ? 'fas fa-eye-slash' : 'fas fa-eye';
+    });
+
+    function showMessage(html, type) {
+      msg.className = 'help ' + (type || '');
+      msg.innerHTML = html;
+      if (type === 'error') {
+        loginCard.classList.add('shake');
+        setTimeout(() => loginCard.classList.remove('shake'), 500);
       }
     }
 
-    function showMessage(text, type = 'error') {
-      const messageBox = document.getElementById('messageBox');
-      const messageText = document.getElementById('messageText');
-      const messageIcon = document.getElementById('messageIcon');
+    function clearMessage() { msg.className = 'help'; msg.innerHTML = ''; }
 
-      messageText.textContent = text;
-      messageBox.className = `message show ${type}`;
-      messageIcon.className = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+    function updateDots() {
+      attemptEl.style.display = failedAttempts > 0 ? 'flex' : 'none';
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById('dot' + i).classList.toggle('used', i <= failedAttempts);
+      }
     }
 
-    function hideMessage() {
-      document.getElementById('messageBox').classList.remove('show');
+    function setButtonLoading(loading) {
+      btnLogin.disabled = loading;
+      inputUser.disabled = loading;
+      inputPass.disabled = loading;
+      if (loading) {
+        btnText.textContent = 'Entrando...';
+        btnIcon.className = 'spinner';
+      } else {
+        btnText.textContent = 'Entrar';
+        btnIcon.className = 'fas fa-arrow-right';
+      }
+    }
+
+    function startLockout() {
+      isLocked = true;
+      loginCard.classList.add('locked');
+      setButtonLoading(true);
+
+      let t = LOCKOUT_TIME;
+      showMessage(
+        `Acesso bloqueado por segurança<div class="countdown" id="cdTimer">${t}s</div><small>Muitas tentativas incorretas</small>`,
+        'locked'
+      );
+
+      countdownInterval = setInterval(() => {
+        t--;
+        const el = document.getElementById('cdTimer');
+        if (el) el.textContent = t + 's';
+        if (t <= 0) { clearInterval(countdownInterval); endLockout(); }
+      }, 1000);
+    }
+
+    function endLockout() {
+      isLocked = false;
+      failedAttempts = 0;
+      loginCard.classList.remove('locked');
+      setButtonLoading(false);
+      clearMessage();
+      updateDots();
+      inputUser.focus();
     }
 
     async function handleLogin(event) {
       event.preventDefault();
+      if (isLocked) return;
 
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const btnLogin = document.getElementById('btnLogin');
-      const btnIcon = document.getElementById('btnIcon');
-      const btnText = document.getElementById('btnText');
+      const username = inputUser.value.trim();
+      const password = inputPass.value;
 
-      if (!username || !password) {
-        showMessage('Preencha todos os campos');
+      inputUser.classList.remove('error');
+      inputPass.classList.remove('error');
+
+      if (!username && !password) {
+        showMessage('Preencha o usuário e a senha', 'warning');
+        inputUser.classList.add('error');
+        inputPass.classList.add('error');
+        return;
+      }
+      if (!username) {
+        showMessage('Por favor, informe o usuário', 'warning');
+        inputUser.classList.add('error');
+        return;
+      }
+      if (!password) {
+        showMessage('Por favor, informe a senha', 'warning');
+        inputPass.classList.add('error');
         return;
       }
 
-      btnLogin.disabled = true;
-      btnIcon.className = 'spinner';
-      btnText.textContent = 'Entrando...';
-      hideMessage();
+      showMessage('Autenticando...', 'info');
+      setButtonLoading(true);
 
       try {
-        const response = await fetch('/auth/login', {
+        const resp = await fetch('/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password }),
         });
-
-        const data = await response.json();
+        const data = await resp.json();
 
         if (data.success) {
+          failedAttempts = 0;
+          updateDots();
           showMessage('Login realizado com sucesso!', 'success');
-          setTimeout(() => {
-            window.location.href = data.redirect || '/dashboard';
-          }, 500);
+          setTimeout(() => { window.location.href = data.redirect || '/dashboard'; }, 600);
         } else {
-          showMessage(data.error || 'Erro ao fazer login');
-          btnLogin.disabled = false;
-          btnIcon.className = 'fas fa-arrow-right';
-          btnText.textContent = 'Entrar';
+          failedAttempts++;
+          updateDots();
+          setButtonLoading(false);
+          inputUser.classList.add('error');
+          inputPass.classList.add('error');
+
+          if (failedAttempts >= MAX_ATTEMPTS) {
+            startLockout();
+          } else {
+            const rem = MAX_ATTEMPTS - failedAttempts;
+            showMessage(
+              `${data.error || 'Usuário ou senha incorretos'}<br><small>${rem} tentativa${rem > 1 ? 's' : ''} restante${rem > 1 ? 's' : ''}</small>`,
+              'error'
+            );
+            setTimeout(() => {
+              if (!isLocked) {
+                clearMessage();
+                inputUser.classList.remove('error');
+                inputPass.classList.remove('error');
+              }
+            }, 5000);
+          }
         }
-      } catch (error) {
-        showMessage('Erro de conexao. Tente novamente.');
-        btnLogin.disabled = false;
-        btnIcon.className = 'fas fa-arrow-right';
-        btnText.textContent = 'Entrar';
+      } catch (e) {
+        setButtonLoading(false);
+        showMessage('Erro de conexão. Tente novamente.', 'error');
       }
     }
+
+    inputUser.addEventListener('input', () => { if (!isLocked) { clearMessage(); inputUser.classList.remove('error'); } });
+    inputPass.addEventListener('input', () => { if (!isLocked) { clearMessage(); inputPass.classList.remove('error'); } });
+    inputUser.addEventListener('keypress', e => { if (e.key === 'Enter' && !isLocked) inputPass.focus(); });
+
+    inputUser.focus();
   </script>
 </body>
 </html>
-
-
-
-
