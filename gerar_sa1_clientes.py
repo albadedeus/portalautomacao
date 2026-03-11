@@ -44,7 +44,7 @@ def gerar(saida: Path) -> None:
     nome = f"SA1_Clientes_{datetime.now().strftime('%Y%m%d')}.xlsx"
     destino = saida / nome
     saida.mkdir(parents=True, exist_ok=True)
-    df.to_excel(destino, index=False)
+    df.to_excel(destino, index=False, sheet_name="SA1_Clientes")
 
     print(f"Arquivo gerado: {destino}")
     print(f"Total de clientes (ultimos {MESES_LIMITE} meses): {len(df)}")

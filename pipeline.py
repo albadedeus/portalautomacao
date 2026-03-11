@@ -189,7 +189,10 @@ def carregar_sa1() -> tuple[pd.DataFrame, str, dict]:
     if ext == ".csv":
         df = pd.read_csv(path, header=0, dtype=str, encoding="latin-1", sep=";")
     else:
-        df = pd.read_excel(path, sheet_name="SA1_Clientes", header=0, dtype=str)
+        try:
+            df = pd.read_excel(path, sheet_name="SA1_Clientes", header=0, dtype=str)
+        except Exception:
+            df = pd.read_excel(path, sheet_name=0, header=0, dtype=str)
 
     colunas = df.columns.tolist()
     def _c(idx: int) -> str:
