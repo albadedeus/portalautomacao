@@ -36,7 +36,10 @@ PLANILHA_SA1 = Path(os.getenv(
     r"Z:\4 - Gestão de Receitas e Apuração de Resultados\4.4 - Núcleo de Informações\Tabelas - Protheus\SA1_Clientes.csv",
 ))
 FALLBACK_SA1    = Path("SA1_Clientes.csv")
-SAIDA_CLIENTES  = Path("clientes_12meses.xlsx")
+SAIDA_CLIENTES  = Path("clientes_24meses.xlsx")
+
+# Flag de cancelamento (setado externamente pelo portal para interromper o loop)
+_stop_requested: bool = False
 SAIDA_RELATORIO = Path("relatorio_api.xlsx")
 MESES_LIMITE    = 24
 DIAS_RECONSULTA = 90   # Re-consulta CNPJs com Data Consulta mais antiga que X dias
@@ -759,6 +762,10 @@ def main():
             )
             df["_cnpj_limpo"] = df[col_cnpj].apply(limpar_cnpj)
             log.info(f"  Salvo → {SAIDA_CLIENTES}")
+
+            if _stop_requested:
+                log.info("Execução interrompida pelo usuário.")
+                break
 
             if i < total:
                 time.sleep(random.uniform(DELAY_MIN, DELAY_MAX))

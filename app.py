@@ -69,11 +69,13 @@ try:
         iniciar_job as cnpj_iniciar_job,
         get_job_status as cnpj_get_status,
         listar_jobs as cnpj_listar_jobs,
+        cancelar_job as cnpj_cancelar_job,
     )
 except ImportError:
-    cnpj_iniciar_job = None
-    cnpj_get_status  = None
-    cnpj_listar_jobs = None
+    cnpj_iniciar_job  = None
+    cnpj_get_status   = None
+    cnpj_listar_jobs  = None
+    cnpj_cancelar_job = None
 
 CNPJ_OUTPUT_FOLDER = 'output_cnpj'
 os.makedirs(CNPJ_OUTPUT_FOLDER, exist_ok=True)
@@ -2007,6 +2009,15 @@ def api_cadastro_clientes_iniciar():
         output_base=CNPJ_OUTPUT_FOLDER,
     )
     return jsonify({'job_id': job_id})
+
+
+@app.route('/api/cadastro-clientes/cancelar/<job_id>', methods=['POST'])
+@login_required
+def api_cadastro_clientes_cancelar(job_id):
+    if cnpj_cancelar_job is None:
+        return jsonify({'error': 'Modulo nao disponivel'}), 500
+    ok = cnpj_cancelar_job(job_id)
+    return jsonify({'cancelado': ok})
 
 
 @app.route('/api/cadastro-clientes/status/<job_id>')

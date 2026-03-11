@@ -369,7 +369,12 @@
                 <span class="spinner-small" id="spinner" style="display:none"></span>
                 <span id="statusTitulo">Preparando...</span>
               </span>
-              <span class="status-badge badge-aguardando" id="statusBadge">Aguardando</span>
+              <div style="display:flex;align-items:center;gap:10px">
+                <button type="button" id="btnParar" style="display:none;background:rgba(255,0,158,0.15);border:1px solid rgba(255,0,158,0.5);color:var(--rosa);padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;width:auto;margin:0;box-shadow:none">
+                  <i class="fas fa-stop-circle"></i> Parar
+                </button>
+                <span class="status-badge badge-aguardando" id="statusBadge">Aguardando</span>
+              </div>
             </div>
 
             <div class="progresso-wrap" id="progressoWrap" style="display:none">
@@ -416,6 +421,7 @@
         'aguardando': ['Aguardando',      'badge-aguardando'],
         'rodando':    ['Em execução',      'badge-rodando'],
         'concluido':  ['Concluído',        'badge-concluido'],
+        'cancelado':  ['Cancelado',        'badge-erro'],
         'erro':       ['Erro',             'badge-erro'],
       };
       return map[status] || [status, 'badge-aguardando'];
@@ -434,10 +440,17 @@
       document.getElementById('statusBadge').className   = 'status-badge ' + cls;
 
       const rodando = data.status === 'rodando' || data.status === 'aguardando';
-      document.getElementById('spinner').style.display = rodando ? 'inline-block' : 'none';
-      document.getElementById('statusTitulo').textContent = rodando
-        ? (data.status === 'aguardando' ? 'Aguardando disponibilidade...' : 'Consultando CNPJs via API...')
-        : (data.status === 'concluido'  ? 'Pipeline concluído com sucesso!' : 'Erro durante a execução');
+      document.getElementById('spinner').style.display  = rodando ? 'inline-block' : 'none';
+      document.getElementById('btnParar').style.display = rodando ? 'inline-flex' : 'none';
+
+      const titleMap = {
+        'aguardando': 'Aguardando disponibilidade...',
+        'rodando':    'Consultando CNPJs via API...',
+        'concluido':  'Pipeline concluído com sucesso!',
+        'cancelado':  'Execução cancelada pelo usuário.',
+        'erro':       'Erro durante a execução',
+      };
+      document.getElementById('statusTitulo').textContent = titleMap[data.status] || data.status;
 
       const prog  = data.progresso || {};
       const atual = prog.atual || 0;
@@ -465,7 +478,7 @@
 
       if (data.tem_relatorio) document.getElementById('downloadsWrap').style.display = 'flex';
 
-      if (data.status === 'concluido' || data.status === 'erro') {
+      if (['concluido', 'cancelado', 'erro'].includes(data.status)) {
         clearInterval(_pollingInterval);
         _pollingInterval = null;
         document.getElementById('btnIniciar').disabled = false;
@@ -508,6 +521,14 @@
         alert('Erro: ' + err.message);
         btn.disabled = false;
       }
+    });
+
+    document.getElementById('btnParar').addEventListener('click', async function () {
+      if (!_jobId) return;
+      this.disabled = true;
+      try {
+        await fetch('/api/cadastro-clientes/cancelar/' + _jobId, { method: 'POST' });
+      } catch (e) { /* ignora */ }
     });
 
     function baixar(tipo) {

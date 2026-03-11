@@ -79,8 +79,9 @@ def iniciar_job(sa1_bytes: bytes, sa1_filename: str, output_base: str) -> str:
             }
             _pipeline.PLANILHA_SA1    = sa1_path
             _pipeline.FALLBACK_SA1    = sa1_path
-            _pipeline.SAIDA_CLIENTES  = output_dir / 'clientes_12meses.xlsx'
+            _pipeline.SAIDA_CLIENTES  = output_dir / 'clientes_24meses.xlsx'
             _pipeline.SAIDA_RELATORIO = output_dir / 'relatorio_api.xlsx'
+            _pipeline._stop_requested = False
 
             handler = _JobLogHandler(job_id)
             handler.setFormatter(
@@ -92,9 +93,14 @@ def iniciar_job(sa1_bytes: bytes, sa1_filename: str, output_base: str) -> str:
 
             try:
                 _pipeline.main()
-                job['status'] = 'concluido'
+                if _pipeline._stop_requested:
+                    job['status'] = 'cancelado'
+                    job['logs'].append(f'[{datetime.now():%H:%M:%S}] Execução cancelada pelo usuário.')
+                else:
+                    job['status'] = 'concluido'
+                    job['logs'].append(f'[{datetime.now():%H:%M:%S}] Pipeline concluído com sucesso.')
                 job['arquivo_relatorio'] = str(output_dir / 'relatorio_api.xlsx')
-                job['arquivo_clientes']  = str(output_dir / 'clientes_12meses.xlsx')
+                job['arquivo_clientes']  = str(output_dir / 'clientes_24meses.xlsx')
                 job['logs'].append(
                     f'[{datetime.now():%H:%M:%S}] Pipeline concluido com sucesso.'
                 )
@@ -115,6 +121,16 @@ def iniciar_job(sa1_bytes: bytes, sa1_filename: str, output_base: str) -> str:
 
 def get_job_status(job_id: str) -> dict | None:
     return _jobs.get(job_id)
+
+
+def cancelar_job(job_id: str) -> bool:
+    """Sinaliza o pipeline para interromper após o próximo CNPJ processado."""
+    job = _jobs.get(job_id)
+    if job and job['status'] == 'rodando':
+        _pipeline._stop_requested = True
+        job['logs'].append(f'[{datetime.now():%H:%M:%S}] Cancelamento solicitado...')
+        return True
+    return False
 
 
 def listar_jobs() -> list:
