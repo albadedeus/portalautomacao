@@ -2031,8 +2031,8 @@ def api_cadastro_clientes_status(job_id):
 def api_cadastro_clientes_gerar_sa1():
     """Lê o SA1 da rede, filtra últimos 24 meses e devolve xlsx para download imediato."""
     import io
-    import pipeline as _pl
     try:
+        import pipeline as _pl
         df, _, _ = _pl.carregar_sa1()
         cols_exp = [c for c in df.columns if not c.startswith('_')]
         buf = io.BytesIO()
