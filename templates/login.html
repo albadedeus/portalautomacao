@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Portal de Automações — Entrar</title>
   <link rel="icon" type="image/png" href="/static/logo-hexa.png">
+  <link rel="shortcut icon" type="image/png" href="/static/logo-hexa.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
   <style>
     @font-face {
       font-family: 'TOTVS Bold';
@@ -15,16 +15,18 @@
     }
 
     :root {
-      --totvs-dark:    #002233;
-      --totvs-blue:    #00DBFF;
-      --totvs-purple:  #A44DFF;
-      --totvs-green:   #00FFD4;
-      --totvs-lime:    #D9FF65;
-      --totvs-orange:  #FF8900;
-      --totvs-pink:    #FF009E;
-      --totvs-white:   #FFFFFF;
-      --totvs-border:  rgba(255,255,255,0.08);
-      --totvs-err-glow: rgba(255,0,158,0.3);
+      --totvs-dark: #002233;
+      --totvs-navy: #002233;
+      --totvs-blue: #00DBFF;
+      --totvs-cyan-dark: #00DBFF;
+      --totvs-gray: #FFFFFF;
+      --totvs-light: #FFFFFF;
+      --totvs-white: #FFFFFF;
+      --totvs-border: rgba(255, 255, 255, 0.08);
+      --totvs-err: #FF009E;
+      --totvs-err-glow: rgba(255, 0, 158, 0.3);
+      --totvs-success: #00FFD4;
+      --totvs-warning: #FF8900;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,19 +42,23 @@
       flex-direction: column;
     }
 
+    /* Background glow effects */
     body::before {
       content: '';
       position: fixed;
-      top: -50%; left: -50%;
-      width: 200%; height: 200%;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
       background:
-        radial-gradient(ellipse 600px 400px at 20% 50%, rgba(0,219,255,0.06) 0%, transparent 70%),
-        radial-gradient(ellipse 500px 300px at 80% 20%, rgba(255,137,0,0.04) 0%, transparent 70%),
-        radial-gradient(ellipse 800px 600px at 60% 80%, rgba(164,77,255,0.04) 0%, transparent 70%);
+        radial-gradient(ellipse 600px 400px at 20% 50%, rgba(0, 219, 255, 0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 300px at 80% 20%, rgba(255, 137, 0, 0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 800px 600px at 60% 80%, rgba(0, 219, 255, 0.03) 0%, transparent 70%);
       pointer-events: none;
       z-index: 0;
     }
 
+    /* ===== MAIN ===== */
     .main {
       flex: 1;
       display: flex;
@@ -63,28 +69,19 @@
       z-index: 10;
     }
 
-    /* ── CARD ── */
+    /* ===== LOGIN CARD ===== */
     .login-card {
       width: 100%;
       max-width: 460px;
-      background: var(--totvs-dark);
+      background: var(--totvs-navy);
       border: 1px solid var(--totvs-border);
       border-radius: 24px;
       padding: 3rem;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
-      animation: slideIn 0.5s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      position: relative;
+      animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .login-card.shake {
-      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-    }
-
-    .login-card.locked {
-      border-color: var(--totvs-pink);
-      box-shadow: 0 25px 60px rgba(255,0,158,0.2);
-    }
-
-    /* Brand */
     .login-brand {
       display: flex;
       align-items: center;
@@ -99,20 +96,18 @@
       width: auto;
     }
 
-    /* Icon box */
-    .icon-box {
-      width: 64px; height: 64px;
-      background: linear-gradient(135deg, var(--totvs-blue), #009bbf);
-      border-radius: 18px;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 1.5rem;
-      box-shadow: 0 8px 32px rgba(0,219,255,0.3);
+    .login-card.shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
     }
 
-    .icon-box i { font-size: 28px; color: var(--totvs-dark); }
+    .login-card.locked {
+      border-color: var(--totvs-err);
+      box-shadow: 0 25px 60px rgba(255, 0, 158, 0.2);
+    }
 
     .login-title {
       text-align: center;
+      font-family: 'TOTVS Bold', sans-serif;
       font-size: 1.6rem;
       font-weight: 800;
       color: var(--totvs-white);
@@ -121,18 +116,22 @@
 
     .login-subtitle {
       text-align: center;
-      color: rgba(255,255,255,0.9);
+      color: var(--totvs-gray);
       font-size: 0.9rem;
+      font-weight: 500;
       margin-bottom: 2rem;
     }
 
-    /* ── FIELDS ── */
-    .field-group { margin-bottom: 1.25rem; }
+    /* ===== FORM FIELDS ===== */
+    .field-group {
+      margin-bottom: 1.25rem;
+    }
 
     .field-label {
       display: block;
+      font-family: 'TOTVS Bold', sans-serif;
       font-weight: 600;
-      color: var(--totvs-white);
+      color: var(--totvs-light);
       margin-bottom: 0.5rem;
       font-size: 0.85rem;
       letter-spacing: 0.3px;
@@ -147,7 +146,7 @@
     .field-icon {
       position: absolute;
       left: 1rem;
-      color: rgba(255,255,255,0.6);
+      color: var(--totvs-gray);
       font-size: 1rem;
       pointer-events: none;
       z-index: 2;
@@ -157,28 +156,33 @@
     input[type="password"] {
       width: 100%;
       appearance: none;
-      background: rgba(0,34,51,0.8);
-      border: 1px solid rgba(0,219,255,0.2);
+      background: var(--totvs-dark);
+      border: 1px solid var(--totvs-border);
       color: var(--totvs-white);
       padding: 1rem 1rem 1rem 3rem;
       border-radius: 14px;
+      font-weight: 500;
       font-size: 0.95rem;
-      font-family: 'TOTVS Bold', sans-serif;
       transition: all 0.3s ease;
+      font-family: 'TOTVS Bold', sans-serif;
     }
 
-    input::placeholder { color: rgba(255,255,255,0.45); font-weight: 400; }
+    input.error {
+      border-color: var(--totvs-err);
+      background: rgba(255, 0, 158, 0.05);
+      animation: shake 0.3s cubic-bezier(.36,.07,.19,.97);
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 400;
+    }
 
     input:focus {
       outline: none;
       border-color: var(--totvs-blue);
-      background: rgba(0,34,51,0.95);
-      box-shadow: 0 0 0 3px rgba(0,219,255,0.15);
-    }
-
-    input.error {
-      border-color: var(--totvs-pink);
-      background: rgba(255,0,158,0.05);
+      background: rgba(0, 34, 51, 0.9);
+      box-shadow: 0 0 0 3px rgba(0, 219, 255, 0.15);
     }
 
     .toggle-password {
@@ -186,7 +190,7 @@
       right: 14px;
       background: none;
       border: none;
-      color: rgba(255,255,255,0.55);
+      color: var(--totvs-gray);
       cursor: pointer;
       padding: 4px;
       display: flex;
@@ -195,12 +199,14 @@
       font-size: 1rem;
     }
 
-    .toggle-password:hover { color: var(--totvs-white); }
+    .toggle-password:hover {
+      color: var(--totvs-white);
+    }
 
-    /* ── BUTTON ── */
+    /* ===== BUTTON ===== */
     .btn-login {
       width: 100%;
-      background: linear-gradient(135deg, var(--totvs-blue), #009bbf);
+      background: linear-gradient(135deg, var(--totvs-blue), var(--totvs-cyan-dark));
       color: var(--totvs-dark);
       border: none;
       padding: 1rem;
@@ -211,8 +217,8 @@
       font-size: 1rem;
       letter-spacing: 0.3px;
       margin-top: 0.5rem;
-      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-      box-shadow: 0 4px 20px rgba(0,219,255,0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(0, 219, 255, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -221,16 +227,34 @@
 
     .btn-login:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0,219,255,0.4);
+      box-shadow: 0 8px 30px rgba(0, 219, 255, 0.4);
     }
 
-    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-login:active:not(:disabled) {
+      transform: translateY(0);
+    }
 
-    /* ── MESSAGES ── */
+    .btn-login:disabled {
+      background: linear-gradient(135deg, #000 0%, #000 100%);
+      cursor: not-allowed;
+      opacity: 0.5;
+      color: #FFF;
+    }
+
+    .btn-login.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .btn-login i {
+      font-size: 1rem;
+    }
+
+    /* ===== MESSAGES ===== */
     .hr {
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--totvs-border), transparent);
-      margin: 1.25rem 0 1rem;
+      margin: 1.25rem 0 1rem 0;
     }
 
     .help {
@@ -242,126 +266,122 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      transition: all 0.3s ease;
       border-radius: 12px;
       padding: 10px;
-      transition: all 0.3s ease;
     }
 
     .help.error {
-      background: rgba(255,0,158,0.1);
-      border: 1px solid rgba(255,0,158,0.3);
-      color: var(--totvs-pink);
+      background: rgba(255, 0, 158, 0.1);
+      border: 1px solid rgba(255, 0, 158, 0.3);
+      color: #FF009E;
       animation: slideIn 0.3s ease;
     }
 
     .help.success {
-      background: rgba(0,255,212,0.1);
-      border: 1px solid rgba(0,255,212,0.3);
-      color: var(--totvs-green);
+      background: rgba(0, 255, 212, 0.1);
+      border: 1px solid rgba(0, 255, 212, 0.3);
+      color: var(--totvs-success);
       animation: slideIn 0.3s ease;
     }
 
     .help.warning {
-      background: rgba(255,137,0,0.1);
-      border: 1px solid rgba(255,137,0,0.3);
-      color: var(--totvs-orange);
+      background: rgba(255, 137, 0, 0.1);
+      border: 1px solid rgba(255, 137, 0, 0.3);
+      color: var(--totvs-warning);
       animation: slideIn 0.3s ease;
     }
 
     .help.info {
-      background: rgba(0,219,255,0.1);
-      border: 1px solid rgba(0,219,255,0.3);
+      background: rgba(0, 219, 255, 0.1);
+      border: 1px solid rgba(0, 219, 255, 0.3);
       color: var(--totvs-blue);
     }
 
     .help.locked {
-      background: rgba(255,0,158,0.15);
-      border: 2px solid var(--totvs-pink);
+      background: rgba(255, 0, 158, 0.15);
+      border: 2px solid var(--totvs-err);
       color: #fff;
-      font-size: 13px;
+      font-size: 14px;
       padding: 15px;
       flex-direction: column;
-      animation: slideIn 0.3s ease;
+      animation: slideIn 0.3s ease, pulse 2s ease infinite;
     }
 
     .countdown {
+      font-family: 'TOTVS Bold', sans-serif;
       font-size: 32px;
       font-weight: 800;
-      color: var(--totvs-pink);
-      margin: 6px 0;
+      color: var(--totvs-err);
+      margin: 10px 0;
       text-shadow: 0 0 20px var(--totvs-err-glow);
       animation: pulse 1s ease infinite;
     }
 
-    /* Attempt dots */
     .attempt-indicator {
       display: flex;
       justify-content: center;
       gap: 8px;
       margin-top: 12px;
       padding: 10px;
-      background: rgba(255,0,158,0.05);
+      background: rgba(255, 0, 158, 0.05);
       border-radius: 8px;
-      border: 1px solid rgba(255,0,158,0.2);
+      border: 1px solid rgba(255, 0, 158, 0.2);
     }
 
     .attempt-dot {
-      width: 12px; height: 12px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.15);
       transition: all 0.3s ease;
     }
 
     .attempt-dot.used {
-      background: var(--totvs-pink);
+      background: var(--totvs-err);
       box-shadow: 0 0 10px var(--totvs-err-glow);
     }
 
-    /* ── ANIMATIONS ── */
+    /* ===== ANIMATIONS ===== */
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      10%,30%,50%,70%,90% { transform: translateX(-10px); }
-      20%,40%,60%,80%     { transform: translateX(10px); }
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+      20%, 40%, 60%, 80% { transform: translateX(10px); }
     }
 
     @keyframes pulse {
-      0%,100% { transform: scale(1); }
-      50%     { transform: scale(1.05); }
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .spinner {
-      width: 18px; height: 18px;
-      border: 2px solid rgba(0,34,51,0.3);
-      border-top-color: var(--totvs-dark);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 560px) {
-      .login-card { padding: 2rem 1.5rem; border-radius: 20px; }
+      .login-card {
+        margin: 16px;
+        padding: 2rem 1.5rem;
+        border-radius: 20px;
+      }
       .login-title { font-size: 1.3rem; }
       .login-brand img { height: 40px; }
-      .icon-box { width: 52px; height: 52px; }
-      .icon-box i { font-size: 22px; }
     }
   </style>
 </head>
 <body>
   <div class="main">
     <div class="login-card" id="loginCard">
-
       <div class="login-brand">
         <img src="/assets/img/TOTVS%20Nordeste%20-%20Logo%20-%20Branco.png" alt="TOTVS Nordeste"
              onerror="this.onerror=null;this.src='/static/logo-hexa.png'">
       </div>
-
       <div class="login-title">Portal de Automações</div>
       <div class="login-subtitle">Faça login para acessar</div>
 
@@ -379,19 +399,19 @@
           <div class="field-input-wrap">
             <i class="fas fa-lock field-icon"></i>
             <input id="password" type="password" placeholder="Digite sua senha" autocomplete="current-password">
-            <button type="button" class="toggle-password" id="togglePass">
+            <button type="button" class="toggle-password" id="togglePass" title="Mostrar senha">
               <i class="fas fa-eye" id="eyeIcon"></i>
             </button>
           </div>
         </div>
 
         <button type="submit" class="btn-login" id="btnLogin">
-          <span id="btnText">Entrar</span>
-          <i class="fas fa-arrow-right" id="btnIcon"></i>
+          Entrar
+          <i class="fas fa-arrow-right"></i>
         </button>
       </form>
 
-      <div id="attemptIndicator" class="attempt-indicator" style="display:none">
+      <div id="attemptIndicator" class="attempt-indicator" style="display: none;">
         <div class="attempt-dot" id="dot1"></div>
         <div class="attempt-dot" id="dot2"></div>
         <div class="attempt-dot" id="dot3"></div>
@@ -402,168 +422,190 @@
     </div>
   </div>
 
-  <script>
-    const MAX_ATTEMPTS  = 3;
-    const LOCKOUT_TIME  = 60;
+<script>
+const MAX_ATTEMPTS = 3;
+const LOCKOUT_TIME = 60;
 
-    let failedAttempts    = 0;
-    let isLocked          = false;
-    let countdownInterval = null;
+let failedAttempts = 0;
+let isLocked = false;
+let lockoutTimer = null;
+let countdownInterval = null;
 
-    const loginCard  = document.getElementById('loginCard');
-    const btnLogin   = document.getElementById('btnLogin');
-    const btnText    = document.getElementById('btnText');
-    const btnIcon    = document.getElementById('btnIcon');
-    const inputUser  = document.getElementById('username');
-    const inputPass  = document.getElementById('password');
-    const msg        = document.getElementById('msg');
-    const attemptEl  = document.getElementById('attemptIndicator');
+const btnLogin        = document.getElementById('btnLogin');
+const inputUser       = document.getElementById('username');
+const inputPass       = document.getElementById('password');
+const msg             = document.getElementById('msg');
+const loginCard       = document.getElementById('loginCard');
+const attemptIndicator = document.getElementById('attemptIndicator');
 
-    // Toggle senha
-    document.getElementById('togglePass').addEventListener('click', () => {
-      const isPass = inputPass.type === 'password';
-      inputPass.type = isPass ? 'text' : 'password';
-      document.getElementById('eyeIcon').className = isPass ? 'fas fa-eye-slash' : 'fas fa-eye';
-    });
+document.getElementById('togglePass').addEventListener('click', () => {
+  const isPassword = inputPass.type === 'password';
+  inputPass.type = isPassword ? 'text' : 'password';
+  document.getElementById('eyeIcon').className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+});
 
-    function showMessage(html, type) {
-      msg.className = 'help ' + (type || '');
-      msg.innerHTML = html;
-      if (type === 'error') {
-        loginCard.classList.add('shake');
-        setTimeout(() => loginCard.classList.remove('shake'), 500);
-      }
+function showMessage(text, type, icon) {
+  msg.className = 'help ' + (type || '');
+  msg.innerHTML = (icon ? icon + ' ' : '') + text;
+  if (type === 'error') {
+    loginCard.classList.add('shake');
+    setTimeout(() => loginCard.classList.remove('shake'), 500);
+  }
+}
+
+function clearMessage() {
+  msg.className = 'help';
+  msg.innerHTML = '';
+}
+
+function updateAttemptIndicator() {
+  if (failedAttempts > 0) {
+    attemptIndicator.style.display = 'flex';
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById('dot' + i);
+      if (dot) dot.classList.toggle('used', i <= failedAttempts);
     }
-
-    function clearMessage() { msg.className = 'help'; msg.innerHTML = ''; }
-
-    function updateDots() {
-      attemptEl.style.display = failedAttempts > 0 ? 'flex' : 'none';
-      for (let i = 1; i <= 3; i++) {
-        document.getElementById('dot' + i).classList.toggle('used', i <= failedAttempts);
-      }
+  } else {
+    attemptIndicator.style.display = 'none';
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById('dot' + i);
+      if (dot) dot.classList.remove('used');
     }
+  }
+}
 
-    function setButtonLoading(loading) {
-      btnLogin.disabled = loading;
-      inputUser.disabled = loading;
-      inputPass.disabled = loading;
-      if (loading) {
-        btnText.textContent = 'Entrando...';
-        btnIcon.className = 'spinner';
-      } else {
-        btnText.textContent = 'Entrar';
-        btnIcon.className = 'fas fa-arrow-right';
-      }
+function startLockout() {
+  isLocked = true;
+  loginCard.classList.add('locked');
+  btnLogin.disabled = true;
+  inputUser.disabled = true;
+  inputPass.disabled = true;
+
+  let remainingTime = LOCKOUT_TIME;
+
+  showMessage(
+    `Acesso bloqueado por segurança<div class="countdown" id="countdown">${remainingTime}s</div><small>Muitas tentativas incorretas</small>`,
+    'locked'
+  );
+
+  countdownInterval = setInterval(() => {
+    remainingTime--;
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = remainingTime + 's';
+    if (remainingTime <= 0) {
+      clearInterval(countdownInterval);
+      endLockout();
     }
+  }, 1000);
 
-    function startLockout() {
-      isLocked = true;
-      loginCard.classList.add('locked');
-      setButtonLoading(true);
+  lockoutTimer = setTimeout(() => endLockout(), LOCKOUT_TIME * 1000);
+}
 
-      let t = LOCKOUT_TIME;
-      showMessage(
-        `Acesso bloqueado por segurança<div class="countdown" id="cdTimer">${t}s</div><small>Muitas tentativas incorretas</small>`,
-        'locked'
-      );
+function endLockout() {
+  isLocked = false;
+  failedAttempts = 0;
+  loginCard.classList.remove('locked');
+  btnLogin.disabled = false;
+  inputUser.disabled = false;
+  inputPass.disabled = false;
+  clearMessage();
+  updateAttemptIndicator();
+  inputUser.focus();
+  if (lockoutTimer)      { clearTimeout(lockoutTimer);     lockoutTimer = null; }
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+}
 
-      countdownInterval = setInterval(() => {
-        t--;
-        const el = document.getElementById('cdTimer');
-        if (el) el.textContent = t + 's';
-        if (t <= 0) { clearInterval(countdownInterval); endLockout(); }
-      }, 1000);
-    }
+async function handleLogin(event) {
+  if (event) event.preventDefault();
+  if (isLocked) return;
 
-    function endLockout() {
-      isLocked = false;
-      failedAttempts = 0;
-      loginCard.classList.remove('locked');
-      setButtonLoading(false);
-      clearMessage();
-      updateDots();
-      inputUser.focus();
-    }
+  const username = inputUser.value.trim();
+  const password = inputPass.value;
 
-    async function handleLogin(event) {
-      event.preventDefault();
-      if (isLocked) return;
+  inputUser.classList.remove('error');
+  inputPass.classList.remove('error');
 
-      const username = inputUser.value.trim();
-      const password = inputPass.value;
-
-      inputUser.classList.remove('error');
-      inputPass.classList.remove('error');
-
-      if (!username && !password) {
-        showMessage('Preencha o usuário e a senha', 'warning');
-        inputUser.classList.add('error');
-        inputPass.classList.add('error');
-        return;
-      }
-      if (!username) {
-        showMessage('Por favor, informe o usuário', 'warning');
-        inputUser.classList.add('error');
-        return;
-      }
-      if (!password) {
-        showMessage('Por favor, informe a senha', 'warning');
-        inputPass.classList.add('error');
-        return;
-      }
-
-      showMessage('Autenticando...', 'info');
-      setButtonLoading(true);
-
-      try {
-        const resp = await fetch('/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-        const data = await resp.json();
-
-        if (data.success) {
-          failedAttempts = 0;
-          updateDots();
-          showMessage('Login realizado com sucesso!', 'success');
-          setTimeout(() => { window.location.href = data.redirect || '/dashboard'; }, 600);
-        } else {
-          failedAttempts++;
-          updateDots();
-          setButtonLoading(false);
-          inputUser.classList.add('error');
-          inputPass.classList.add('error');
-
-          if (failedAttempts >= MAX_ATTEMPTS) {
-            startLockout();
-          } else {
-            const rem = MAX_ATTEMPTS - failedAttempts;
-            showMessage(
-              `${data.error || 'Usuário ou senha incorretos'}<br><small>${rem} tentativa${rem > 1 ? 's' : ''} restante${rem > 1 ? 's' : ''}</small>`,
-              'error'
-            );
-            setTimeout(() => {
-              if (!isLocked) {
-                clearMessage();
-                inputUser.classList.remove('error');
-                inputPass.classList.remove('error');
-              }
-            }, 5000);
-          }
-        }
-      } catch (e) {
-        setButtonLoading(false);
-        showMessage('Erro de conexão. Tente novamente.', 'error');
-      }
-    }
-
-    inputUser.addEventListener('input', () => { if (!isLocked) { clearMessage(); inputUser.classList.remove('error'); } });
-    inputPass.addEventListener('input', () => { if (!isLocked) { clearMessage(); inputPass.classList.remove('error'); } });
-    inputUser.addEventListener('keypress', e => { if (e.key === 'Enter' && !isLocked) inputPass.focus(); });
-
+  if (!username && !password) {
+    showMessage('Preencha o usuário e a senha', 'warning');
+    inputUser.classList.add('error');
+    inputPass.classList.add('error');
     inputUser.focus();
-  </script>
+    return;
+  }
+  if (!username) {
+    showMessage('Por favor, informe o usuário', 'warning');
+    inputUser.classList.add('error');
+    inputUser.focus();
+    return;
+  }
+  if (!password) {
+    showMessage('Por favor, informe a senha', 'warning');
+    inputPass.classList.add('error');
+    inputPass.focus();
+    return;
+  }
+
+  showMessage('Autenticando...', 'info');
+  btnLogin.classList.add('loading');
+  btnLogin.disabled = true;
+  inputUser.disabled = true;
+  inputPass.disabled = true;
+
+  try {
+    const resp = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await resp.json();
+
+    if (data.success) {
+      failedAttempts = 0;
+      updateAttemptIndicator();
+      showMessage('Login realizado com sucesso!', 'success');
+      setTimeout(() => { location.href = data.redirect || '/dashboard'; }, 800);
+    } else {
+      failedAttempts++;
+      updateAttemptIndicator();
+
+      btnLogin.classList.remove('loading');
+      btnLogin.disabled = false;
+      inputUser.disabled = false;
+      inputPass.disabled = false;
+      inputUser.classList.add('error');
+      inputPass.classList.add('error');
+
+      if (failedAttempts >= MAX_ATTEMPTS) {
+        startLockout();
+      } else {
+        const remaining = MAX_ATTEMPTS - failedAttempts;
+        showMessage(
+          `${data.error || 'Usuário ou senha incorretos'}<br><small>${remaining} tentativa${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}</small>`,
+          'error'
+        );
+        setTimeout(() => {
+          if (failedAttempts < MAX_ATTEMPTS) {
+            clearMessage();
+            inputUser.classList.remove('error');
+            inputPass.classList.remove('error');
+          }
+        }, 5000);
+      }
+    }
+  } catch (e) {
+    btnLogin.classList.remove('loading');
+    btnLogin.disabled = false;
+    inputUser.disabled = false;
+    inputPass.disabled = false;
+    showMessage('Erro de conexão. Tente novamente.', 'error');
+  }
+}
+
+inputUser.addEventListener('input', () => { if (!isLocked) { clearMessage(); inputUser.classList.remove('error'); } });
+inputPass.addEventListener('input', () => { if (!isLocked) { clearMessage(); inputPass.classList.remove('error'); } });
+inputUser.addEventListener('keypress', e => { if (e.key === 'Enter' && !isLocked) inputPass.focus(); });
+
+inputUser.focus();
+</script>
 </body>
 </html>
