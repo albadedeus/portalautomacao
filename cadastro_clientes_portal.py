@@ -51,7 +51,7 @@ def iniciar_job(sa1_bytes: bytes, sa1_filename: str, output_base: str) -> str:
     output_dir = Path(output_base) / job_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    sa1_path = output_dir / 'SA1_Clientes.csv'
+    sa1_path = output_dir / sa1_filename   # preserva extensão original (.csv ou .xlsx)
     sa1_path.write_bytes(sa1_bytes)
 
     _jobs[job_id] = {
