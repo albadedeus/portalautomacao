@@ -50,6 +50,11 @@ def gerar(saida: Path) -> None:
     print(f"Total de clientes (ultimos {MESES_LIMITE} meses): {len(df)}")
 
 
+SAIDA_PADRAO = Path(
+    r"Z:\4 - Gestão de Receitas e Apuração de Resultados"
+    r"\4.4 - Núcleo de Informações\Cadastro de Clientes"
+)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Gera SA1_Clientes filtrado para o Portal de Automacoes"
@@ -57,8 +62,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--saida",
         type=Path,
-        default=Path.home() / "Desktop",
-        help="Pasta onde salvar o arquivo (padrao: Desktop)",
+        default=SAIDA_PADRAO,
+        help=f"Pasta onde salvar o arquivo (padrao: {SAIDA_PADRAO})",
     )
     args = parser.parse_args()
     gerar(args.saida)
