@@ -20,9 +20,11 @@ import re
 import time
 import random
 import logging
+import threading
 import unicodedata
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Optional
 
 import httpx
 import pandas as pd
@@ -38,8 +40,9 @@ PLANILHA_SA1 = Path(os.getenv(
 FALLBACK_SA1    = Path("SA1_Clientes.csv")
 SAIDA_CLIENTES  = Path("clientes_24meses.xlsx")
 
-# Flag de cancelamento (setado externamente pelo portal para interromper o loop)
-_stop_requested: bool = False
+# Cancelamento thread-safe: Event + referência ao cliente httpx ativo
+_stop_event: threading.Event = threading.Event()
+_active_client: Optional[httpx.Client] = None
 SAIDA_RELATORIO = Path("relatorio_api.xlsx")
 MESES_LIMITE    = 24
 DIAS_RECONSULTA = 90   # Re-consulta CNPJs com Data Consulta mais antiga que X dias
@@ -697,9 +700,11 @@ def main():
     total = len(pendentes)
     log.info(f"Total de CNPJs: {total}")
 
+    global _active_client
     with httpx.Client(timeout=15, headers=headers) as client:
+        _active_client = client
         for i, idx in enumerate(pendentes, 1):
-            if _stop_requested:
+            if _stop_event.is_set():
                 log.info("Execução interrompida pelo usuário.")
                 break
 
@@ -774,12 +779,14 @@ def main():
             df["_cnpj_limpo"] = df[col_cnpj].apply(limpar_cnpj)
             log.info(f"  Salvo → {SAIDA_CLIENTES}")
 
-            if _stop_requested:
+            if _stop_event.is_set():
                 log.info("Execução interrompida pelo usuário.")
                 break
 
             if i < total:
                 time.sleep(random.uniform(DELAY_MIN, DELAY_MAX))
+
+        _active_client = None
 
     # ── Passo 4: Relatório final ──────────────────────────────
     salvar_relatorio(df, col_cnpj, cols_sa1)

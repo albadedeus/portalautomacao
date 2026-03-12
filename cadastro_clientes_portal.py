@@ -93,7 +93,7 @@ def iniciar_job(sa1_bytes: bytes, sa1_filename: str, output_base: str) -> str:
             _pipeline.FALLBACK_SA1    = sa1_path
             _pipeline.SAIDA_CLIENTES  = output_dir / 'clientes_24meses.xlsx'
             _pipeline.SAIDA_RELATORIO = output_dir / 'relatorio_api.xlsx'
-            _pipeline._stop_requested = False
+            _pipeline._stop_event.clear()
 
             handler = _JobLogHandler(job_id)
             handler.setFormatter(
@@ -105,7 +105,7 @@ def iniciar_job(sa1_bytes: bytes, sa1_filename: str, output_base: str) -> str:
 
             try:
                 _pipeline.main()
-                if _pipeline._stop_requested:
+                if _pipeline._stop_event.is_set():
                     job['status'] = 'cancelado'
                     job['logs'].append(f'[{datetime.now():%H:%M:%S}] Execução cancelada pelo usuário.')
                 else:
@@ -140,7 +140,14 @@ def cancelar_job(job_id: str) -> bool:
     job['cancelar'] = True
     job['logs'].append(f'[{datetime.now():%H:%M:%S}] Cancelamento solicitado...')
     if job['status'] == 'rodando':
-        _pipeline._stop_requested = True
+        _pipeline._stop_event.set()
+        # Fecha o cliente httpx ativo para abortar a requisição em andamento
+        client = _pipeline._active_client
+        if client:
+            try:
+                client.close()
+            except Exception:
+                pass
     return True
 
 
