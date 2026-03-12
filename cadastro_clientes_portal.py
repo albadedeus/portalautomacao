@@ -113,9 +113,6 @@ def iniciar_job(sa1_bytes: bytes, sa1_filename: str, output_base: str) -> str:
                     job['logs'].append(f'[{datetime.now():%H:%M:%S}] Pipeline concluído com sucesso.')
                 job['arquivo_relatorio'] = str(output_dir / 'relatorio_api.xlsx')
                 job['arquivo_clientes']  = str(output_dir / 'clientes_24meses.xlsx')
-                job['logs'].append(
-                    f'[{datetime.now():%H:%M:%S}] Pipeline concluido com sucesso.'
-                )
             except Exception as exc:
                 job['status'] = 'erro'
                 job['logs'].append(f'[{datetime.now():%H:%M:%S}] ERRO FATAL: {exc}')
