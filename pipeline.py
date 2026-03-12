@@ -699,6 +699,10 @@ def main():
 
     with httpx.Client(timeout=15, headers=headers) as client:
         for i, idx in enumerate(pendentes, 1):
+            if _stop_requested:
+                log.info("Execução interrompida pelo usuário.")
+                break
+
             cnpj = df.at[idx, "_cnpj_limpo"]
 
             # CPF (11 dígitos) → API de CNPJ não se aplica
