@@ -359,7 +359,7 @@
                 <span id="statusTitulo">Preparando...</span>
               </span>
               <div style="display:flex;align-items:center;gap:10px">
-                <button type="button" id="btnParar" style="display:none;background:rgba(255,0,158,0.15);border:1px solid rgba(255,0,158,0.5);color:var(--rosa);padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;width:auto;margin:0;box-shadow:none;cursor:pointer;transition:all 0.2s;font-family:var(--font-sans)"
+                <button type="button" id="btnParar" style="display:none;background:rgba(255,0,158,0.15);border:1px solid rgba(255,0,158,0.5);color:var(--rosa);padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;width:auto;margin:0;box-shadow:none;cursor:pointer;transition:all 0.2s;font-family:var(--font-sans);display:none;align-items:center;gap:7px"
                   onmouseover="this.style.background='rgba(255,0,158,0.32)';this.style.boxShadow='0 0 10px rgba(255,0,158,0.4)'"
                   onmouseout="this.style.background='rgba(255,0,158,0.15)';this.style.boxShadow='none'">
                   <i class="fas fa-stop-circle"></i> Parar
@@ -517,6 +517,15 @@
     document.getElementById('btnParar').addEventListener('click', async function () {
       if (!_jobId) return;
       this.disabled = true;
+      // Mensagem imediata no log
+      const logBox = document.getElementById('logBox');
+      const div = document.createElement('div');
+      div.className = 'log-line warn';
+      const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      div.textContent = `[${agora}] Cancelando execução... aguarde o CNPJ atual finalizar.`;
+      logBox.appendChild(div);
+      logBox.scrollTop = logBox.scrollHeight;
+      _lastLogCount++;
       try {
         await fetch('/api/cadastro-clientes/cancelar/' + _jobId, { method: 'POST' });
       } catch (e) { /* ignora */ }
