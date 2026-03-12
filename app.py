@@ -1848,7 +1848,7 @@ def processar_nfs_pdf(pdf_path):
         'AP': None, 'AQ': None,
         'AR': 0,
         'AS': None,
-        'AT': int(num_nota) if num_nota and num_nota.isdigit() else None,
+        'AT': 495859,
     }
 
 
