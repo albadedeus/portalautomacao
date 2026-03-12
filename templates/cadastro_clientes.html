@@ -359,7 +359,9 @@
                 <span id="statusTitulo">Preparando...</span>
               </span>
               <div style="display:flex;align-items:center;gap:10px">
-                <button type="button" id="btnParar" style="display:none;background:rgba(255,0,158,0.15);border:1px solid rgba(255,0,158,0.5);color:var(--rosa);padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;width:auto;margin:0;box-shadow:none">
+                <button type="button" id="btnParar" style="display:none;background:rgba(255,0,158,0.15);border:1px solid rgba(255,0,158,0.5);color:var(--rosa);padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;width:auto;margin:0;box-shadow:none;cursor:pointer;transition:all 0.2s;font-family:var(--font-sans)"
+                  onmouseover="this.style.background='rgba(255,0,158,0.32)';this.style.boxShadow='0 0 10px rgba(255,0,158,0.4)'"
+                  onmouseout="this.style.background='rgba(255,0,158,0.15)';this.style.boxShadow='none'">
                   <i class="fas fa-stop-circle"></i> Parar
                 </button>
                 <span class="status-badge badge-aguardando" id="statusBadge">Aguardando</span>
