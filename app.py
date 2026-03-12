@@ -1777,17 +1777,21 @@ def processar_nfs_pdf(pdf_path):
     m_aliq = re.search(r'Alíquota Aplicada\n([\d,]+)%', tm)
     aliquota = float(m_aliq.group(1).replace(',', '.')) if m_aliq else None
 
+    # ── Valor total ───────────────────────────────────────────────────────
+    m_vt = re.search(r'VALOR TOTAL DA NFS-E(.*?)TOTAIS APROXIMADOS', t, re.DOTALL)
+    tv = m_vt.group(1) if m_vt else ''
+    m_vn = re.search(r'Valor do Serviço\n(R\$\s*[\d.,]+)', tv)
+    valor_nota = _to_float(m_vn.group(1)) if m_vn else None
+
     # ── Tributação federal ────────────────────────────────────────────────
     m_fed = re.search(r'TRIBUTA.{0,6}O\s*FEDERAL(.*?)(?:VALOR\s*TOTAL|TOTAIS\s*APROXIMADOS|$)', t, re.DOTALL | re.IGNORECASE)
     tf = m_fed.group(1) if m_fed else ''
-    # Extração robusta por rótulo (mesma linha ou próximas), evitando campos em branco.
     irrf_c = int(_extrair_valor_por_rotulo(tf, r'\bIRRF\b') or 0)
     pis_c = int(_extrair_valor_por_rotulo(tf, r'\bPIS\b') or 0)
     cofins_c = int(_extrair_valor_por_rotulo(tf, r'\bC[O0]FINS\b') or 0)
     contrib_c = int(_extrair_valor_por_rotulo(tf, r'Contribui[cç][oõ]es\s*Sociais|\bCSLL\b') or 0)
 
     # Consistência por alíquotas federais usuais (1,5% / 0,65% / 3% / 1%)
-    # quando OCR embaralha valores e repete PIS/IRRF em outros campos.
     if valor_nota is not None:
         irrf_calc = _cents(valor_nota * 0.015)
         pis_calc = _cents(valor_nota * 0.0065)
@@ -1802,12 +1806,6 @@ def processar_nfs_pdf(pdf_path):
             cofins_c = cofins_calc
         if contrib_c <= 0 or contrib_c == irrf_c:
             contrib_c = csll_calc
-
-    # ── Valor total ───────────────────────────────────────────────────────
-    m_vt = re.search(r'VALOR TOTAL DA NFS-E(.*?)TOTAIS APROXIMADOS', t, re.DOTALL)
-    tv = m_vt.group(1) if m_vt else ''
-    m_vn = re.search(r'Valor do Serviço\n(R\$\s*[\d.,]+)', tv)
-    valor_nota = _to_float(m_vn.group(1)) if m_vn else None
 
     return {
         'A':  '2.0',
