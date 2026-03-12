@@ -153,6 +153,13 @@ def _norm_logradouro(s: str) -> str:
     base = _RE_ZEROS.sub(r"\1", base)
     return _RE_SPACES.sub(" ", base).strip()
 
+def _norm_nome(s: str) -> str:
+    """Normaliza razão social ignorando variações de & vs E e pontuação."""
+    base = re.sub(r'\s*&\s*', ' E ', str(s))
+    base = re.sub(r'[./\-,]', ' ', base)
+    base = _norm(base)
+    return re.sub(r'\s+', ' ', base).strip()
+
 def _norm_cep(s: str) -> str:
     return re.sub(r"\D", "", str(s))
 
@@ -432,7 +439,7 @@ def calcular_divergencias(api: dict, sa1: dict) -> str:
     """
     # ── Campos com comparação exata ──────────────────────────
     checks = {
-        "Nome":      (_norm(api.get("Razão Social", "")),  _norm(sa1.get("nome", ""))),
+        "Nome":      (_norm_nome(api.get("Razão Social", "")),  _norm_nome(sa1.get("nome", ""))),
         "CEP":       (_norm_cep(api.get("CEP", "")),       _norm_cep(sa1.get("cep", ""))),
         "Bairro":    (_norm(api.get("Bairro", "")),        _norm(sa1.get("bairro", ""))),
         "Município": (_norm(api.get("Município", "")),     _norm(sa1.get("municipio", ""))),
