@@ -62,11 +62,23 @@ def iniciar_job(sa1_bytes: bytes, sa1_filename: str, output_base: str) -> str:
         'arquivo_clientes': None,
         'iniciado_em': datetime.now().isoformat(),
         'output_dir': str(output_dir),
+        'cancelar': False,
     }
 
     def _run() -> None:
+        job = _jobs[job_id]
+        # Cancelado antes mesmo de conseguir o lock
+        if job.get('cancelar'):
+            job['status'] = 'cancelado'
+            job['logs'].append(f'[{datetime.now():%H:%M:%S}] Cancelado antes de iniciar.')
+            return
+
         with _job_lock:
             job = _jobs[job_id]
+            if job.get('cancelar'):
+                job['status'] = 'cancelado'
+                job['logs'].append(f'[{datetime.now():%H:%M:%S}] Cancelado antes de iniciar.')
+                return
             job['status'] = 'rodando'
             job['logs'].append(f'[{datetime.now():%H:%M:%S}] Iniciando pipeline...')
 
@@ -124,13 +136,15 @@ def get_job_status(job_id: str) -> dict | None:
 
 
 def cancelar_job(job_id: str) -> bool:
-    """Sinaliza o pipeline para interromper após o próximo CNPJ processado."""
+    """Sinaliza o pipeline para interromper. Funciona em aguardando e rodando."""
     job = _jobs.get(job_id)
-    if job and job['status'] == 'rodando':
+    if not job or job['status'] in ('concluido', 'cancelado', 'erro'):
+        return False
+    job['cancelar'] = True
+    job['logs'].append(f'[{datetime.now():%H:%M:%S}] Cancelamento solicitado...')
+    if job['status'] == 'rodando':
         _pipeline._stop_requested = True
-        job['logs'].append(f'[{datetime.now():%H:%M:%S}] Cancelamento solicitado...')
-        return True
-    return False
+    return True
 
 
 def listar_jobs() -> list:

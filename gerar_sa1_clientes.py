@@ -3,14 +3,16 @@
 Script standalone: gera o arquivo SA1_Clientes filtrado (ultimos 24 meses).
 
 Execute na maquina que tem acesso ao servidor de arquivos (Z:).
-O arquivo gerado deve ser colocado na pasta de upload do portal.
+O arquivo gerado fica em Z:\...\Cadastro de Clientes\Tabela SA1 - 24 meses\
 
 Uso:
-    python gerar_sa1_clientes.py
-    python gerar_sa1_clientes.py --saida "C:/Users/fulano/Desktop"
+    python gerar_sa1_clientes.py               # gera o arquivo
+    python gerar_sa1_clientes.py --agendar     # agendamento automatico no dia 23 de cada mes
 """
 
 import argparse
+import subprocess
+import sys
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -24,6 +26,11 @@ PLANILHA_SA1 = Path(
 MESES_LIMITE = 24
 COL_CNPJ_IDX = 14   # O — CNPJ/CPF
 COL_DATA_IDX = 17   # R — Último Contato
+
+SAIDA_PADRAO = Path(
+    r"Z:\4 - Gestão de Receitas e Apuração de Resultados"
+    r"\4.4 - Núcleo de Informações\Cadastro de Clientes\Tabela SA1 - 24 meses"
+)
 
 
 def gerar(saida: Path) -> None:
@@ -50,10 +57,33 @@ def gerar(saida: Path) -> None:
     print(f"Total de clientes (ultimos {MESES_LIMITE} meses): {len(df)}")
 
 
-SAIDA_PADRAO = Path(
-    r"Z:\4 - Gestão de Receitas e Apuração de Resultados"
-    r"\4.4 - Núcleo de Informações\Cadastro de Clientes"
-)
+def agendar() -> None:
+    """Registra tarefa no Windows Task Scheduler para rodar todo dia 23 as 07:00."""
+    script = Path(sys.argv[0]).resolve()
+    python = Path(sys.executable).resolve()
+    nome_tarefa = "TOTVS_SA1_Clientes_Dia23"
+
+    cmd = (
+        f'schtasks /Create /F /TN "{nome_tarefa}" '
+        f'/TR "\\"{python}\\" \\"{script}\\"" '
+        f'/SC MONTHLY /D 23 /ST 07:00 '
+        f'/RL HIGHEST'
+    )
+
+    print(f"Registrando tarefa: {nome_tarefa}")
+    print(f"  Script : {script}")
+    print(f"  Python : {python}")
+    print(f"  Agenda : Todo dia 23 as 07:00\n")
+
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode == 0:
+        print("Tarefa agendada com sucesso!")
+        print("Para verificar: Agendador de Tarefas > Biblioteca > TOTVS_SA1_Clientes_Dia23")
+    else:
+        print("Erro ao agendar:")
+        print(result.stderr or result.stdout)
+        print("\nTente rodar como Administrador.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -65,5 +95,14 @@ if __name__ == "__main__":
         default=SAIDA_PADRAO,
         help=f"Pasta onde salvar o arquivo (padrao: {SAIDA_PADRAO})",
     )
+    parser.add_argument(
+        "--agendar",
+        action="store_true",
+        help="Registra tarefa no Windows Task Scheduler (todo dia 23 as 07:00)",
+    )
     args = parser.parse_args()
-    gerar(args.saida)
+
+    if args.agendar:
+        agendar()
+    else:
+        gerar(args.saida)
